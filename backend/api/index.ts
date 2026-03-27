@@ -1,9 +1,10 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import 'dotenv/config';
 import homeRouter from '../src/routers/homeRouter.js';
 import {createCartRouter} from '../src/routers/cartRouter.js';
-import { CartService, InMemoryCartStore } from "../src/controllers/cartController.js";
+import { CartService, SupabaseCartStore } from "../src/controllers/cartController.js";
 
 dotenv.config();
 
@@ -48,7 +49,7 @@ app.use(express.json());
 
 app.use('/', homeRouter)
 // Swap InMemoryCartStore → MongoCartStore or RedisCartStore in production
-const cartService = new CartService(new InMemoryCartStore());
+const cartService = new CartService(new SupabaseCartStore());
 app.use("/api/cart", createCartRouter(cartService));
 
 app.listen(PORT, () => {

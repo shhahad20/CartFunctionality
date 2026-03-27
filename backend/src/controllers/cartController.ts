@@ -10,7 +10,6 @@ export interface CartStore {
 
 // ─── In-memory adapter ────────────────────────────────────────────
 const CART_TTL = 1000 * 60 * 60 * 24; // 24h
-
 export class SupabaseCartStore implements CartStore {
   async get(cartId: string): Promise<Cart> {
     const { data, error } = await supabase
