@@ -18,9 +18,11 @@ export interface Product {
   }
   
   export interface Cart {
-    userId: string;
+    id: string;
+    userId?: string;
     items: CartItem[];
-    updatedAt?: Date;
+    // updatedAt?: Date;
+    updatedAt: number;
   }
   
   export interface CartTotals {

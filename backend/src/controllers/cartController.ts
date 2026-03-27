@@ -1,95 +1,75 @@
+import { supabase } from "../config/supabaseClient.js";
 import type { Cart, CartItem, AddItemRequest } from "../types.js";
 
 // ─── Storage interface ────────────────────────────────────────────
-
 export interface CartStore {
-  get(userId: string): Promise<Cart>;
-  save(userId: string, cart: Cart): Promise<Cart>;
-  delete(userId: string): Promise<void>;
+  get(cartId: string): Promise<Cart>;
+  save(cartId: string, cart: Cart): Promise<Cart>;
+  delete(cartId: string): Promise<void>;
 }
 
 // ─── In-memory adapter ────────────────────────────────────────────
+const CART_TTL = 1000 * 60 * 60 * 24; // 24h
 
-export class InMemoryCartStore implements CartStore {
-  private store = new Map<string, Cart>();
+export class SupabaseCartStore implements CartStore {
+  async get(cartId: string): Promise<Cart> {
+    const { data, error } = await supabase
+      .from("carts")
+      .select("*")
+      .eq("id", cartId)
+      .single();
 
-  async get(userId: string): Promise<Cart> {
-    return this.store.get(userId) ?? { userId, items: [] };
+    if (error || !data) {
+      const newCart: Cart = {
+        id: cartId,
+        items: [],
+        updatedAt: Date.now(),
+      };
+
+      await this.save(cartId, newCart);
+      return newCart;
+    }
+
+    let cart: Cart = {
+      id: data.id,
+      items: data.items,
+      updatedAt: data.updated_at,
+    };
+
+    const isExpired = Date.now() - cart.updatedAt > CART_TTL;
+
+    if (isExpired) {
+      cart = { id: cartId, items: [], updatedAt: Date.now() };
+      await this.save(cartId, cart);
+    }
+
+    return cart;
   }
 
-  async save(userId: string, cart: Cart): Promise<Cart> {
-    const updated = { ...cart, updatedAt: new Date() };
-    this.store.set(userId, updated);
-    return updated;
-  }
+  async save(cartId: string, cart: Cart): Promise<Cart> {
+    cart.updatedAt = Date.now();
 
-  async delete(userId: string): Promise<void> {
-    this.store.delete(userId);
-  }
-}
-
-// ─── MongoDB adapter stub ─────────────────────────────────────────
-
-export class MongoCartStore implements CartStore {
-  private col: any; // replace with: Collection<Cart> from 'mongodb'
-
-  constructor(db: any) {
-    this.col = db.collection("carts");
-  }
-
-  async get(userId: string): Promise<Cart> {
-    const doc = await this.col.findOne({ userId });
-    return doc ?? { userId, items: [] };
-  }
-
-  async save(userId: string, cart: Cart): Promise<Cart> {
-    const updated = { ...cart, updatedAt: new Date() };
-    await this.col.updateOne(
-      { userId },
-      { $set: updated },
-      { upsert: true }
-    );
-    return updated;
-  }
-
-  async delete(userId: string): Promise<void> {
-    await this.col.deleteOne({ userId });
-  }
-}
-
-// ─── Redis adapter stub ───────────────────────────────────────────
-
-export class RedisCartStore implements CartStore {
-  private readonly ttl: number;
-
-  constructor(
-    private client: any, // replace with RedisClientType from 'redis'
-    ttl = 60 * 60 * 24 * 7 // 7 days
-  ) {
-    this.ttl = ttl;
-  }
-
-  private key(userId: string): string {
-    return `cart:${userId}`;
-  }
-
-  async get(userId: string): Promise<Cart> {
-    const raw = await this.client.get(this.key(userId));
-    return raw ? (JSON.parse(raw) as Cart) : { userId, items: [] };
-  }
-
-  async save(userId: string, cart: Cart): Promise<Cart> {
-    const updated = { ...cart, updatedAt: new Date() };
-    await this.client.set(this.key(userId), JSON.stringify(updated), {
-      EX: this.ttl,
+    const { error } = await supabase.from("carts").upsert({
+      id: cartId,
+      items: cart.items,
+      updated_at: cart.updatedAt,
     });
-    return updated;
+
+    if (error) throw error;
+
+    return cart;
   }
 
-  async delete(userId: string): Promise<void> {
-    await this.client.del(this.key(userId));
+  async delete(cartId: string): Promise<void> {
+    const { error } = await supabase
+      .from("carts")
+      .delete()
+      .eq("id", cartId);
+
+    if (error) throw error;
   }
 }
+
 
 // ─── CartService ──────────────────────────────────────────────────
 
@@ -102,12 +82,12 @@ export class CartService {
 
   async addItem(
     cartId: string,
-    { productId, quantity = 1 }: AddItemRequest
+    { productId, quantity = 1 }: AddItemRequest,
   ): Promise<Cart> {
     const cart = await this.store.get(cartId);
     const idx = cart.items.findIndex((i) => i.productId === productId);
 
-    console.log(`🙋🏼‍♀️Adding ${quantity} of ${productId} to cart ${cartId}`);
+    console.log(`🙋🏼 Adding ${quantity} of ${productId} to cart ${cartId}`);
 
     if (idx >= 0) {
       cart.items[idx].quantity += quantity;
@@ -128,7 +108,7 @@ export class CartService {
   async updateQuantity(
     cartId: string,
     productId: string,
-    quantity: number
+    quantity: number,
   ): Promise<Cart> {
     if (quantity < 1) return this.removeItem(cartId, productId);
 
@@ -142,15 +122,12 @@ export class CartService {
     return this.store.delete(cartId);
   }
 
-  async mergeGuestCart(
-    userId: string,
-    guestItems: CartItem[]
-  ): Promise<Cart> {
+  async mergeGuestCart(userId: string, guestItems: CartItem[]): Promise<Cart> {
     const cart = await this.store.get(userId);
 
     for (const guestItem of guestItems) {
       const idx = cart.items.findIndex(
-        (i) => i.productId === guestItem.productId
+        (i) => i.productId === guestItem.productId,
       );
       if (idx >= 0) {
         cart.items[idx].quantity += guestItem.quantity;
