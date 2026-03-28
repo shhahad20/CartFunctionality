@@ -89,6 +89,7 @@ interface CartContextValue extends CartState, CartTotals {
   removeItem: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
+  checkout: (email: string) => Promise<void>;
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -115,7 +116,7 @@ interface CartProviderProps {
 
 export function CartProvider({
   children,
-  apiBase = "http://localhost:5173/api/cart",
+  apiBase = "http://localhost:5173/api",
   userId = null,
 }: CartProviderProps) {
   const [cartId, setCartId] = useState<string | null>(null);
@@ -144,7 +145,7 @@ export function CartProvider({
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       if (!headers) return;
-      const res = await fetch(apiBase, { headers });
+      const res = await fetch(`${apiBase}`, { headers });
       const data = await res.json();
       dispatch({ type: "SET_CART", payload: data.items });
     } catch (err) {
@@ -156,6 +157,36 @@ export function CartProvider({
     if (!headers) return;
     fetchCart();
   }, [headers, fetchCart]);
+
+const checkout = useCallback(async (email: string): Promise<void> => {
+  try {
+    if (!cartId) throw new Error("Cart not initialized");
+
+    const res = await fetch(`${apiBase}/checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cart-id": cartId,
+      },
+      body: JSON.stringify({ cartId, email }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Checkout failed (${res.status})`);
+    }
+
+    const data: { url: string } = await res.json();
+
+    if (!data.url) {
+      throw new Error("Missing Stripe URL");
+    }
+
+    // redirect to Stripe
+    window.location.href = data.url;
+  } catch (error) {
+    console.error("Checkout error:", error);
+  }
+}, [apiBase, cartId]);
 
   const addItem = useCallback(
     async (product: Product, quantity = 1): Promise<void> => {
@@ -213,7 +244,7 @@ export function CartProvider({
       dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
       try {
         if (!headers) return;
-        const res = await fetch(`${apiBase}/items/${productId}`, {
+        const res = await fetch(`${apiBase}/cart/items/${productId}`, {
           method: "PATCH",
           headers,
           body: JSON.stringify({ quantity }),
@@ -233,7 +264,7 @@ export function CartProvider({
     dispatch({ type: "CLEAR_CART" });
     try {
       if (!headers) return;
-      await fetch(apiBase, { method: "DELETE", headers });
+      await fetch(`${apiBase}`, { method: "DELETE", headers });
     } catch (err) {
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
       fetchCart();
@@ -257,8 +288,18 @@ export function CartProvider({
       removeItem,
       updateQuantity,
       clearCart,
+      checkout,
     }),
-    [state, totals, fetchCart, addItem, removeItem, updateQuantity, clearCart],
+    [
+      state,
+      totals,
+      fetchCart,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      checkout,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
