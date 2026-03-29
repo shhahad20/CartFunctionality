@@ -34,7 +34,9 @@ export interface Product {
   
   export interface AddItemRequest {
     productId: string;
-    quantity?: number;
+    quantity: number;
+    name?: string;
+    price?: number;
   }
   
   export interface UpdateQuantityRequest {

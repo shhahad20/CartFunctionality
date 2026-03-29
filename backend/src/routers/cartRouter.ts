@@ -48,7 +48,7 @@ export function createCartRouter(cartService: CartService): Router {
 
   // POST /api/cart/items
   router.post("/items", async (req: Request, res: Response): Promise<void> => {
-    const { productId, quantity = 1 } = req.body as AddItemRequest;
+    const { productId, quantity = 1, name, price } = req.body as AddItemRequest;
     const cartId = (req as CartRequest).cartId;
 
     if (!productId) {
@@ -64,9 +64,10 @@ export function createCartRouter(cartService: CartService): Router {
       const cart = await cartService.addItem(cartId, {
         productId,
         quantity,
+        name,
+        price,
       });
       res.status(200).json({ items: cart.items });
-      console.log("Yay added to cart! 🎉");
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

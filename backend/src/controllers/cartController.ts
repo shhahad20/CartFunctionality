@@ -60,15 +60,11 @@ export class SupabaseCartStore implements CartStore {
   }
 
   async delete(cartId: string): Promise<void> {
-    const { error } = await supabase
-      .from("carts")
-      .delete()
-      .eq("id", cartId);
+    const { error } = await supabase.from("carts").delete().eq("id", cartId);
 
     if (error) throw error;
   }
 }
-
 
 // ─── CartService ──────────────────────────────────────────────────
 
@@ -81,18 +77,22 @@ export class CartService {
 
   async addItem(
     cartId: string,
-    { productId, quantity = 1 }: AddItemRequest,
+    { productId, quantity, name, price }: AddItemRequest,
   ): Promise<Cart> {
     const cart = await this.store.get(cartId);
     const idx = cart.items.findIndex((i) => i.productId === productId);
 
-    console.log(`🙋🏼 Adding ${quantity} of ${productId} to cart ${cartId}`);
+    console.log(`🔷 Adding ${quantity} of ${productId} to cart ${cartId} with price $${price}`);
 
     if (idx >= 0) {
       cart.items[idx].quantity += quantity;
     } else {
-      // Optionally enrich item from a ProductService here
-      cart.items.push({ productId, name: productId, price: 0, quantity });
+      cart.items.push({
+        productId,
+        name: name || productId,
+        price: Number(price) || 0,
+        quantity,
+      });
     }
 
     return this.store.save(cartId, cart);

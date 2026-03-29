@@ -197,13 +197,14 @@ const checkout = useCallback(async (email: string): Promise<void> => {
         image: product.image,
         quantity,
       };
+      console.log("Adding to cart:", optimistic);
       dispatch({ type: "ADD_TO_CART", payload: optimistic });
       try {
         if (!headers) return;
         const res = await fetch(`${apiBase}/items`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ productId: product.id, quantity }),
+          body: JSON.stringify({ productId: product.id, quantity, name: product.name, price: product.price }),
         });
         if (!res.ok) throw new Error(`Failed to add item (${res.status})`);
         const data = (await res.json()) as { items: CartItem[] };
