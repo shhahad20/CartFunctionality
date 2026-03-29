@@ -5,6 +5,7 @@ import 'dotenv/config';
 import homeRouter from '../src/routers/homeRouter.js';
 import {createCartRouter} from '../src/routers/cartRouter.js';
 import { CartService, SupabaseCartStore } from "../src/controllers/cartController.js";
+import checkoutRouter from "../src/routers/checkoutRouter.js";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use('/', homeRouter)
 // Swap InMemoryCartStore → MongoCartStore or RedisCartStore in production
 const cartService = new CartService(new SupabaseCartStore());
 app.use("/api/cart", createCartRouter(cartService));
+app.use('/api/cart/checkout', checkoutRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

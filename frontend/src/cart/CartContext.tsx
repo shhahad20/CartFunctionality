@@ -244,7 +244,7 @@ const checkout = useCallback(async (email: string): Promise<void> => {
       dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
       try {
         if (!headers) return;
-        const res = await fetch(`${apiBase}/cart/items/${productId}`, {
+        const res = await fetch(`${apiBase}/items/${productId}`, {
           method: "PATCH",
           headers,
           body: JSON.stringify({ quantity }),

@@ -235,3 +235,59 @@
     transition: background 0.15s, color 0.15s;
   }
   .cart-clear:hover { background: #fff0f3; color: var(--cart-highlight); border-color: var(--cart-highlight); }
+
+  .checkout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.checkout-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+}
+
+.checkout-modal h2 {
+  margin-bottom: 8px;
+}
+
+.checkout-modal input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.checkout-modal button[type="submit"] {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.checkout-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+}
+
+.checkout-error {
+  color: red;
+  margin-top: 8px;
+}

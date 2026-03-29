@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { BrowserRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { CartProvider, CartDrawer, CartToggle } from "./cart";
 import type { Product } from "./types/types";
 import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
+import { CheckoutModal } from "./cart/CartComponent.tsx";
 
 // Demo products
 const PRODUCTS: Product[] = [
@@ -64,15 +71,14 @@ function ProductCard({
         <div className="cardHeader">
           <div className="product-cat">
             <h3 className="cardTitle">{product.name}</h3>
-            
           </div>
           <span className="cardBadge">
-              {product.name.includes("UI")
-                ? "UI Design"
-                : product.name.includes("Brand")
-                  ? "Graphic Design"
-                  : "Web Development"}
-            </span>
+            {product.name.includes("UI")
+              ? "UI Design"
+              : product.name.includes("Brand")
+                ? "Graphic Design"
+                : "Web Development"}
+          </span>
           {/* <div className="cardMeta">
             <button className="pricePill" type="button">
               {product.price === 0 ? "Pre-Order" : `${product.price} SAR`}
@@ -96,7 +102,11 @@ function ProductsHome() {
   return (
     <main className="productsGrid">
       {PRODUCTS.map((p) => (
-        <ProductCard key={p.id} product={p} onOpen={() => navigate(`/product/${p.id}`)} />
+        <ProductCard
+          key={p.id}
+          product={p}
+          onOpen={() => navigate(`/product/${p.id}`)}
+        />
       ))}
     </main>
   );
@@ -113,6 +123,11 @@ function ProductDetailsRoute() {
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const handleCheckout = () => {
+    setCheckoutOpen(true);
+  };
 
   return (
     <BrowserRouter>
@@ -134,7 +149,11 @@ function App() {
           <CartDrawer
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
-            onCheckout={() => alert("Proceeding to checkout!")}
+            onCheckout={handleCheckout}
+          />
+          <CheckoutModal
+            open={checkoutOpen}
+            onClose={() => setCheckoutOpen(false)}
           />
         </div>
       </CartProvider>

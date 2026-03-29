@@ -2,7 +2,10 @@ import { useEffect, useState, type FC, type ReactNode } from "react";
 import type { CartItem, Product } from "../types/types";
 import { useCart } from "./CartContext";
 
-
+interface CheckoutModalProps {
+  open: boolean;
+  onClose: () => void;
+}
 // ─── Add To Cart Button ───────────────────────────────────────────
 interface AddToCartButtonProps{
     product: Product;
@@ -204,3 +207,63 @@ export const CartToggle:FC<CartToggleProps> =({onClick}) =>{
       </button> 
     );
 }
+// ─── Cart Checkout Modal ───────────────────────
+export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
+  const { checkout } = useCart();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!open) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email");
+      return;
+    }
+
+    try {
+      setError(null);
+      setLoading(true);
+      await checkout(email);
+    } catch {
+      setError("Checkout failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="checkout-overlay" onClick={onClose}>
+      <div
+        className="checkout-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2>Checkout</h2>
+        <p>Enter your email to complete your order</p>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          {error && <p className="checkout-error">{error}</p>}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Processing..." : "Continue to Payment"}
+          </button>
+        </form>
+
+        <button className="checkout-close" onClick={onClose}>
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
