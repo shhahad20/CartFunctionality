@@ -102,13 +102,13 @@ function ProductsHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/products")
+    fetch("http://localhost:5173/api/products")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
       })
       .catch((err) => {
-        console.error("Failed to fetch products:", err);
+        console.error("Failed to fetch products:", err.message);
       })
       .finally(() => {
         setLoading(false);
@@ -143,7 +143,7 @@ function ProductDetailsRoute() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`http://localhost:4000/api/products/${id}`)
+    fetch(`http://localhost:5173/api/products/${id}`)
       .then((res) => res.json())
       .then(setProduct)
       .catch((err) => console.error(err));
@@ -166,7 +166,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <CartProvider apiBase="http://localhost:4000/api/cart" userId="user_123">
+      <CartProvider apiBase="http://localhost:5173/api/cart" userId="user_123">
         <div className="shopPage">
           <nav className="topNav">
             <div className="brandMark">Services</div>
