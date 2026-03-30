@@ -1,5 +1,6 @@
 import { supabase } from "../config/supabaseClient.js";
 import type { Cart, CartItem, AddItemRequest } from "../types.js";
+import { getProductById } from "./productController.js";
 
 // ─── Storage interface ────────────────────────────────────────────
 export interface CartStore {
@@ -77,20 +78,22 @@ export class CartService {
 
   async addItem(
     cartId: string,
-    { productId, quantity, name, price }: AddItemRequest,
+    { productId, quantity = 1 }: AddItemRequest,
   ): Promise<Cart> {
     const cart = await this.store.get(cartId);
     const idx = cart.items.findIndex((i) => i.productId === productId);
 
-    console.log(`🔷 Adding ${quantity} of ${productId} to cart ${cartId} with price $${price}`);
+    // 🔒 fetch real product from DB
+    const product = await getProductById(productId);
 
     if (idx >= 0) {
       cart.items[idx].quantity += quantity;
     } else {
       cart.items.push({
         productId,
-        name: name || productId,
-        price: Number(price) || 0,
+        name: product.name,
+        price: product.price, // ✅ trusted
+        image: product.image,
         quantity,
       });
     }

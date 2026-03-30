@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Route,
@@ -13,37 +13,37 @@ import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 
 // Demo products
-const PRODUCTS: Product[] = [
-  {
-    id: "p1",
-    name: "Brand Identity Design",
-    price: 0,
-    image:
-      "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/Hillside%2017.png",
-  },
+// const PRODUCTS: Product[] = [
+//   {
+//     id: "p1",
+//     name: "Brand Identity Design",
+//     price: 0,
+//     image:
+//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/Hillside%2017.png",
+//   },
 
-  {
-    id: "p2",
-    name: "Portfolio Website",
-    price: 0,
-    image:
-      "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/webiste-02.png",
-  },
-  {
-    id: "p3",
-    name: "User Interface Design UI",
-    price: 0,
-    image:
-      "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/Ui.png",
-  },
-  {
-    id: "p4",
-    name: "Portfolio Website Template",
-    price: 149,
-    image:
-      "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/webiste03.png",
-  },
-];
+//   {
+//     id: "p2",
+//     name: "Portfolio Website",
+//     price: 0,
+//     image:
+//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/webiste-02.png",
+//   },
+//   {
+//     id: "p3",
+//     name: "User Interface Design UI",
+//     price: 0,
+//     image:
+//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/Ui.png",
+//   },
+//   {
+//     id: "p4",
+//     name: "Portfolio Website Template",
+//     price: 149,
+//     image:
+//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/webiste03.png",
+//   },
+// ];
 
 function ProductCard({
   product,
@@ -98,10 +98,34 @@ function ProductCard({
 
 function ProductsHome() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://localhost:4000/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch products:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <p style={{ padding: 16 }}>Loading products...</p>;
+  }
+
+  if (products.length === 0) {
+    return <p style={{ padding: 16 }}>No products found.</p>;
+  }
 
   return (
     <main className="productsGrid">
-      {PRODUCTS.map((p) => (
+      {products.map((p) => (
         <ProductCard
           key={p.id}
           product={p}
@@ -114,9 +138,20 @@ function ProductsHome() {
 
 function ProductDetailsRoute() {
   const { id } = useParams<{ id: string }>();
-  const product = PRODUCTS.find((p) => p.id === id);
+  const [product, setProduct] = useState<Product | null>(null);
 
-  if (!product) return <div style={{ padding: 16 }}>Product not found.</div>;
+  useEffect(() => {
+    if (!id) return;
+
+    fetch(`http://localhost:4000/api/products/${id}`)
+      .then((res) => res.json())
+      .then(setProduct)
+      .catch((err) => console.error(err));
+  }, [id]);
+
+  if (!product) {
+    return <div style={{ padding: 16 }}>Loading product...</div>;
+  }
 
   return <ProductDetailsPage product={product} />;
 }

@@ -158,35 +158,38 @@ export function CartProvider({
     fetchCart();
   }, [headers, fetchCart]);
 
-const checkout = useCallback(async (email: string): Promise<void> => {
-  try {
-    if (!cartId) throw new Error("Cart not initialized");
+  const checkout = useCallback(
+    async (email: string): Promise<void> => {
+      try {
+        if (!cartId) throw new Error("Cart not initialized");
 
-    const res = await fetch(`${apiBase}/checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-cart-id": cartId,
-      },
-      body: JSON.stringify({ cartId, email }),
-    });
+        const res = await fetch(`${apiBase}/checkout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-cart-id": cartId,
+          },
+          body: JSON.stringify({ cartId, email }),
+        });
 
-    if (!res.ok) {
-      throw new Error(`Checkout failed (${res.status})`);
-    }
+        if (!res.ok) {
+          throw new Error(`Checkout failed (${res.status})`);
+        }
 
-    const data: { url: string } = await res.json();
+        const data: { url: string } = await res.json();
 
-    if (!data.url) {
-      throw new Error("Missing Stripe URL");
-    }
+        if (!data.url) {
+          throw new Error("Missing Stripe URL");
+        }
 
-    // redirect to Stripe
-    window.location.href = data.url;
-  } catch (error) {
-    console.error("Checkout error:", error);
-  }
-}, [apiBase, cartId]);
+        // redirect to Stripe
+        window.location.href = data.url;
+      } catch (error) {
+        console.error("Checkout error:", error);
+      }
+    },
+    [apiBase, cartId],
+  );
 
   const addItem = useCallback(
     async (product: Product, quantity = 1): Promise<void> => {
@@ -197,19 +200,18 @@ const checkout = useCallback(async (email: string): Promise<void> => {
         image: product.image,
         quantity,
       };
-      console.log("Adding to cart:", optimistic);
+
       dispatch({ type: "ADD_TO_CART", payload: optimistic });
+      
       try {
         if (!headers) return;
         const res = await fetch(`${apiBase}/items`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ productId: product.id, quantity, name: product.name, price: product.price }),
+          body: JSON.stringify({ productId: product.id, quantity }),
         });
         if (!res.ok) throw new Error(`Failed to add item (${res.status})`);
         const data = (await res.json()) as { items: CartItem[] };
-
-        console.log(data + "data from addItem");
 
         dispatch({ type: "SET_CART", payload: data.items });
       } catch (err) {
@@ -217,7 +219,7 @@ const checkout = useCallback(async (email: string): Promise<void> => {
         fetchCart();
       }
     },
-    [apiBase, headers],
+    [apiBase, headers, fetchCart],
   );
   const removeItem = useCallback(
     async (productId: string): Promise<void> => {
