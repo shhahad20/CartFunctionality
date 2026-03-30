@@ -12,38 +12,6 @@ import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 
-// Demo products
-// const PRODUCTS: Product[] = [
-//   {
-//     id: "p1",
-//     name: "Brand Identity Design",
-//     price: 0,
-//     image:
-//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/Hillside%2017.png",
-//   },
-
-//   {
-//     id: "p2",
-//     name: "Portfolio Website",
-//     price: 0,
-//     image:
-//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/webiste-02.png",
-//   },
-//   {
-//     id: "p3",
-//     name: "User Interface Design UI",
-//     price: 0,
-//     image:
-//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/Ui.png",
-//   },
-//   {
-//     id: "p4",
-//     name: "Portfolio Website Template",
-//     price: 149,
-//     image:
-//       "https://puakrabhbhosdpyxfsfk.supabase.co/storage/v1/object/public/images/webiste03.png",
-//   },
-// ];
 
 function ProductCard({
   product,
@@ -102,7 +70,7 @@ function ProductsHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5173/api/products")
+    fetch("http://localhost:4000/api/products")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
@@ -143,7 +111,7 @@ function ProductDetailsRoute() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`http://localhost:5173/api/products/${id}`)
+    fetch(`http://localhost:4000/api/products/${id}`)
       .then((res) => res.json())
       .then(setProduct)
       .catch((err) => console.error(err));
@@ -166,7 +134,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <CartProvider apiBase="http://localhost:5173/api/cart" userId="user_123">
+      <CartProvider apiBase="http://localhost:4000/api/cart" userId="user_123">
         <div className="shopPage">
           <nav className="topNav">
             <div className="brandMark">Services</div>
