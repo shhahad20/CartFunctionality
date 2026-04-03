@@ -8,6 +8,7 @@ import { CartService, SupabaseCartStore } from "../src/controllers/cartControlle
 import checkoutRouter from "../src/routers/checkoutRouter.js";
 import productRouter from "../src/routers/productRouter.js";
 import webhook from "../src/routers/webhook.js";
+import orderRouter from "../src/routers/orderRouter.js";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ const cartService = new CartService(new SupabaseCartStore());
 app.use("/api/cart", createCartRouter(cartService));
 app.use('/api/cart/checkout', checkoutRouter);
 app.use('/api/products', productRouter);
+app.use("/api/orders", orderRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

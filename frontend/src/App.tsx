@@ -11,6 +11,7 @@ import type { Product } from "./types/types";
 import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
+import SuccessPage from "./components/SuccessPage.tsx";
 
 
 function ProductCard({
@@ -147,6 +148,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ProductsHome />} />
             <Route path="/product/:id" element={<ProductDetailsRoute />} />
+            <Route path="/success" element={<SuccessPage />} />
           </Routes>
 
           <CartDrawer
