@@ -22,11 +22,13 @@ router.post(
     let event;
     try {
       // Ensure req.body is a Buffer
-      const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || "");
+      const rawBody = Buffer.isBuffer(req.body)
+        ? req.body
+        : Buffer.from(req.body || "");
       event = stripe.webhooks.constructEvent(
         rawBody,
         sig,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        process.env.STRIPE_WEBHOOK_SECRET!,
       );
     } catch (err) {
       console.error("❌ Webhook signature failed:", err);
@@ -39,22 +41,40 @@ router.post(
       const session = event.data.object as any;
 
       console.log("✅ Payment successful:", session.id);
-
-      // 🔥 Update order in DB
-      const { error } = await supabase
+      const { data: order } = await supabase
         .from("orders")
-        .update({ status: "paid" })
-        .eq("stripe_session_id", session.id);
+        .select("*")
+        .eq("stripe_session_id", session.id)
+        .single();
 
-      if (error) {
-        console.error("❌ Failed to update order:", error);
-      } else {
-        console.log("✅ Order marked as PAID");
+      if (order) {
+        // ✅ mark as paid
+        await supabase
+          .from("orders")
+          .update({ status: "paid" })
+          .eq("id", order.id);
+
+        // ✅ clear cart
+        await supabase
+          .from("carts")
+          .update({ items: [] })
+          .eq("id", order.cart_id);
       }
+      //  Update order in DB
+      // const { error } = await supabase
+      //   .from("orders")
+      //   .update({ status: "paid" })
+      //   .eq("stripe_session_id", session.id);
+
+      // if (error) {
+      //   console.error("❌ Failed to update order:", error);
+      // } else {
+      //   console.log("✅ Order marked as PAID");
+      // }
     }
 
     res.status(200).json({ received: true });
-  }
+  },
 );
 
 export default router;

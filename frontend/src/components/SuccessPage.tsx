@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useCart } from "../cart";
 
 type OrderItem = {
   productId: string;
@@ -21,6 +22,7 @@ export default function SuccessPage() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     if (!sessionId) return;
@@ -32,6 +34,12 @@ export default function SuccessPage() {
       .finally(() => setLoading(false));
   }, [sessionId]);
 
+  useEffect(() => {
+    if (order) {
+      clearCart(); // 🧹 clear local state
+    }
+  }, [order]);
+
   if (loading) return <p style={{ padding: 20 }}>Loading your order...</p>;
 
   if (!order) return <p style={{ padding: 20 }}>Order not found.</p>;
@@ -42,9 +50,15 @@ export default function SuccessPage() {
       <p>Thank you for your order!</p>
 
       <h3>Order Details</h3>
-      <p><strong>Email:</strong> {order.email}</p>
-      <p><strong>Status:</strong> {order.status}</p>
-      <p><strong>Total:</strong> ${(order.amount / 100).toFixed(2)}</p>
+      <p>
+        <strong>Email:</strong> {order.email}
+      </p>
+      <p>
+        <strong>Status:</strong> {order.status}
+      </p>
+      <p>
+        <strong>Total:</strong> ${(order.amount / 100).toFixed(2)}
+      </p>
 
       <h4>Items:</h4>
       <ul>
@@ -54,6 +68,7 @@ export default function SuccessPage() {
           </li>
         ))}
       </ul>
+      <button onClick={() => (window.location.href = "/")}>Back to Home</button>
     </div>
   );
 }
