@@ -1,22 +1,60 @@
 import { Router } from "express";
 import { stripe } from "../config/stripe.js";
 import { supabase } from "../config/supabaseClient.js";
+import bodyParser from "body-parser";
 
 const router = Router();
 
-router.post("/webhook", async (req, res) => {
-  const event = req.body;
+// ⚠️ Stripe needs raw body
+router.post(
+  "/",
+  bodyParser.raw({ type: "application/json" }),
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+  async (req: any, res: any) => {
+    // Stripe requires the raw body as a Buffer
+    const sig = req.headers["stripe-signature"] as string | undefined;
+    if (!sig) {
+      console.error("❌ Missing Stripe signature header");
+      res.status(400).send("Missing Stripe signature");
+      return;
+    }
 
-    await supabase
-      .from("orders")
-      .update({ status: "paid" })
-      .eq("stripe_session_id", session.id);
+    let event;
+    try {
+      // Ensure req.body is a Buffer
+      const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || "");
+      event = stripe.webhooks.constructEvent(
+        rawBody,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+    } catch (err) {
+      console.error("❌ Webhook signature failed:", err);
+      res.status(400).send("Webhook Error");
+      return;
+    }
+
+    // 🎯 Handle event
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as any;
+
+      console.log("✅ Payment successful:", session.id);
+
+      // 🔥 Update order in DB
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "paid" })
+        .eq("stripe_session_id", session.id);
+
+      if (error) {
+        console.error("❌ Failed to update order:", error);
+      } else {
+        console.log("✅ Order marked as PAID");
+      }
+    }
+
+    res.status(200).json({ received: true });
   }
-
-  res.json({ received: true });
-});
+);
 
 export default router;

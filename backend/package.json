@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "nodemon dist/api/index.js"
+    "start": "nodemon dist/api/index.js",
+    "webhook": ".\\stripe listen --forward-to localhost:4000/api/webhook"
   },
   "keywords": [],
   "author": "",

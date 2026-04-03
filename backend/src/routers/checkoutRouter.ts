@@ -25,7 +25,6 @@ router.post("/", async (req, res) => {
   console.log("🛒 Cart items:", cart.items);
   // 2. Create Stripe line items
   const line_items = cart.items.map((item: any) => ({
-    
     price_data: {
       currency: "usd",
       product_data: {
@@ -43,12 +42,15 @@ router.post("/", async (req, res) => {
     customer_email: email,
     billing_address_collection: "required",
     phone_number_collection: {
-      enabled: true, // 👈 adds friction so UI doesn't skip
+      enabled: true,
     },
 
     // client_reference_id: cartId,
-    
+
     line_items,
+    metadata: {
+      cartId,
+    },
     success_url: "http://localhost:5173/success",
     cancel_url: "http://localhost:5173/cart",
   });

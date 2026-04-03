@@ -7,32 +7,10 @@ import {createCartRouter} from '../src/routers/cartRouter.js';
 import { CartService, SupabaseCartStore } from "../src/controllers/cartController.js";
 import checkoutRouter from "../src/routers/checkoutRouter.js";
 import productRouter from "../src/routers/productRouter.js";
+import webhook from "../src/routers/webhook.js";
 
 dotenv.config();
 
-// interface Product {
-//   id: string;
-//   name: string;
-//   price: number;
-//   image?: string;
-// }
-
-// interface CartItem {
-//   productId: string;
-//   name: string;
-//   price: number;
-//   image?: string;
-//   quantity: number;
-// }
-
-// interface AddItemBody {
-//   productId?: string;
-//   quantity?: number;
-// }
-
-// interface UpdateQuantityBody {
-//   quantity?: number;
-// }
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -46,6 +24,8 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }))
+// ⚠️ MUST be before express.json() because Stripe needs raw body for signature verification
+app.use("/api/webhook", webhook);
 app.use(express.json());
 
 
