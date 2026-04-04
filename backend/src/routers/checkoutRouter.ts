@@ -5,67 +5,118 @@ import { supabase } from "../config/supabaseClient.js";
 const router = Router();
 
 router.post("/", async (req, res) => {
-  const { cartId, email } = req.body;
+  try {
+    const { cartId, email } = req.body;
 
-  if (!cartId || !email) {
-    return res.status(400).json({ error: "Missing cartId or email" });
-  }
+    // Validate input
+    if (!cartId || !email || !email.includes("@")) {
+      return res.status(400).json({ error: "Invalid cartId or email" });
+    }
 
-  // 1. Get cart from DB
-  const { data: cart } = await supabase
-    .from("carts")
-    .select("*")
-    .eq("id", cartId)
-    .single();
+    // Fetch cart from DB
+    const { data: cart, error: cartError } = await supabase
+      .from("carts")
+      .select("*")
+      .eq("id", cartId)
+      .single();
 
-  if (!cart || cart.items.length === 0) {
-    return res.status(400).json({ error: "Cart is empty" });
-  }
+    if (cartError || !cart) {
+      return res.status(500).json({ error: "Failed to fetch cart" });
+    }
 
-  console.log("🛒 Cart items:", cart.items);
-  // 2. Create Stripe line items
-  const line_items = cart.items.map((item: any) => ({
-    price_data: {
-      currency: "usd",
-      product_data: {
-        name: item.name,
+    if (!cart.items || cart.items.length === 0) {
+      return res.status(400).json({ error: "Cart is empty" });
+    }
+
+    console.log("🛒 Cart:", cart.items); // 🔺TO BE DELETED LATER🔺
+
+    // Re-fetch products from DB
+    const line_items = await Promise.all(
+      cart.items.map(async (item: any) => {
+        const { data: product, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", item.productId)
+          .single();
+
+        if (error || !product) {
+          throw new Error(`Invalid product: ${item.productId}`);
+        }
+
+        return {
+          price_data: {
+            currency: "sar",
+            product_data: {
+              name: product.name,
+            },
+            unit_amount: Math.round(product.price * 100), // 🔒 secure price
+          },
+          quantity: item.quantity,
+        };
+      })
+    );
+
+    // Calculate total
+    const total = line_items.reduce(
+      (sum, item) =>
+        sum + item.price_data.unit_amount * item.quantity,
+      0
+    );
+
+    if (total <= 0) {
+      return res.status(400).json({ error: "Invalid cart total" });
+    }
+
+    // Create Stripe session
+    const session = await stripe.checkout.sessions.create(
+      {
+        payment_method_types: ["card"],
+        mode: "payment",
+        customer_email: email,
+
+        billing_address_collection: "required",
+        phone_number_collection: {
+          enabled: true,
+        },
+
+        line_items,
+
+        metadata: {
+          cartId,
+        },
+        // 🔺NEED TO CHANGE URLS BEFORE DEPLOYMENT🔺
+        success_url:
+          "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: "http://localhost:5173/cart",
       },
-      unit_amount: Math.round(item.price * 100),
-    },
-    quantity: item.quantity,
-  }));
+      {
+        idempotencyKey: cartId, //prevent duplicate sessions
+      }
+    );
 
-  // 3. Create Stripe session
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    mode: "payment",
-    customer_email: email,
-    billing_address_collection: "required",
-    phone_number_collection: {
-      enabled: true,
-    },
+    // Saving order BEFORE payment confirmation
+    const { error: orderError } = await supabase.from("orders").insert({
+      cart_id: cartId,
+      email,
+      items: cart.items,
+      amount: total, 
+      status: "pending",
+      stripe_session_id: session.id,
+    });
 
-    // client_reference_id: cartId,
+    if (orderError) {
+      console.error("❌ Order insert failed:", orderError);
+      return res.status(500).json({ error: "Failed to create order" });
+    }
 
-    line_items,
-    metadata: {
-      cartId,
-    },
-    success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
-    cancel_url: "http://localhost:5173/cart",
-  });
+    console.log("✅ Stripe session created:", session.id);
 
-  // 4. Save order in Supabase
-  await supabase.from("orders").insert({
-    cart_id: cartId,
-    email,
-    items: cart.items,
-    amount: session.amount_total,
-    status: "pending",
-    stripe_session_id: session.id,
-  });
+    res.json({ url: session.url });
 
-  res.json({ url: session.url });
+  } catch (err) {
+    console.error("❌ Checkout error:", err);
+    res.status(500).json({ error: "Checkout failed" });
+  }
 });
 
 export default router;
