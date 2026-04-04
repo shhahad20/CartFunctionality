@@ -8,13 +8,14 @@ export function ProductPage({
   product: Product;
   onClose: () => void;
 }) {
-  const category =
-    product.name.includes("UI")
-      ? "UI Design"
-      : product.name.includes("Brand")
-        ? "Graphic Design"
-        : "Web Development";
-
+  // const category =
+  //   product.name.includes("UI")
+  //     ? "UI Design"
+  //     : product.name.includes("Brand")
+  //       ? "Graphic Design"
+  //       : "Web Development";
+  const tag = product.tag;
+  console.log("🚀 ~ file: ProductPage.tsx:11 ~ ProductPage ~ tag:", tag);
   const priceLabel = product.price === 0 ? "Pre-Order" : `${product.price} SAR`;
 
   return (
@@ -28,7 +29,7 @@ export function ProductPage({
       <div className="productPageModal" onClick={(e) => e.stopPropagation()}>
         <div className="productPageTop">
           <div className="productPageBadges">
-            <span className="cardBadge">{category}</span>
+            <span className="cardBadge">{tag}</span>
             <span className="pricePill productPagePrice">{priceLabel}</span>
           </div>
           <button className="productPageClose" type="button" onClick={onClose}>

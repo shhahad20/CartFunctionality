@@ -42,11 +42,12 @@ function ProductCard({
             <h3 className="cardTitle">{product.name}</h3>
           </div>
           <span className="cardBadge">
-            {product.name.includes("UI")
+            {/* {product.name.includes("UI")
               ? "UI Design"
               : product.name.includes("Brand")
                 ? "Graphic Design"
-                : "Web Development"}
+                : "Web Development"} */}
+                {product.tag}
           </span>
           {/* <div className="cardMeta">
             <button className="pricePill" type="button">

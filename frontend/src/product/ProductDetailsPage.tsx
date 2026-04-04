@@ -3,13 +3,13 @@ import type { Product } from "../types/types";
 import { AddToCartButton } from "../cart";
 
 export function ProductDetailsPage({ product }: { product: Product }) {
-  const category =
-    product.name.includes("UI")
-      ? "UI Design"
-      : product.name.includes("Brand")
-        ? "Graphic Design"
-        : "Web Development";
-
+  // const category =
+  //   product.name.includes("UI")
+  //     ? "UI Design"
+  //     : product.name.includes("Brand")
+  //       ? "Graphic Design"
+  //       : "Web Development";
+  const tag = product.tag;
   const priceLabel = product.price === 0 ? "Pre-Odredr" : `${product.price} SAR`;
 
   return (
@@ -29,7 +29,7 @@ export function ProductDetailsPage({ product }: { product: Product }) {
 
         <div className="productDetailsInfo">
           <div className="productDetailsBadges">
-            <span className="cardBadge">{category}</span>
+            <span className="cardBadge">{tag}</span>
             <span className="pricePill productDetailsPrice">{priceLabel}</span>
           </div>
 
