@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import 'dotenv/config';
+import rateLimit from "express-rate-limit";
 import homeRouter from '../src/routers/homeRouter.js';
 import {createCartRouter} from '../src/routers/cartRouter.js';
 import { CartService, SupabaseCartStore } from "../src/controllers/cartController.js";
@@ -34,7 +35,10 @@ app.use('/', homeRouter)
 // Swap InMemoryCartStore → MongoCartStore or RedisCartStore in production
 const cartService = new CartService(new SupabaseCartStore());
 app.use("/api/cart", createCartRouter(cartService));
-app.use('/api/cart/checkout', checkoutRouter);
+app.use('/api/cart/checkout', checkoutRouter, rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+}));
 app.use('/api/products', productRouter);
 app.use("/api/orders", orderRouter);
 

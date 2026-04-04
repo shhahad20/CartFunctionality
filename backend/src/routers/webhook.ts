@@ -9,60 +9,77 @@ const router = Router();
 router.post(
   "/",
   bodyParser.raw({ type: "application/json" }),
-
   async (req: any, res: any) => {
-    // Stripe requires the raw body as a Buffer
-    const sig = req.headers["stripe-signature"] as string | undefined;
+    const sig = req.headers["stripe-signature"];
+
     if (!sig) {
-      console.error("❌ Missing Stripe signature header");
-      res.status(400).send("Missing Stripe signature");
-      return;
+      console.error("Missing Stripe signature");
+      return res.status(400).send("Missing signature");
     }
 
     let event;
+
     try {
-      // Ensure req.body is a Buffer
       const rawBody = Buffer.isBuffer(req.body)
         ? req.body
         : Buffer.from(req.body || "");
+
       event = stripe.webhooks.constructEvent(
         rawBody,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET!,
       );
     } catch (err) {
-      console.error("❌ Webhook signature failed:", err);
-      res.status(400).send("Webhook Error");
-      return;
+      console.error("Signature verification failed:", err);
+      return res.status(400).send("Webhook Error");
     }
 
-    // 🎯 Handle event
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as any;
+    try {
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as any;
 
-      console.log("✅ Payment successful:", session.id);
-      const { data: order } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("stripe_session_id", session.id)
-        .single();
+        console.log("✅ Payment event:", session.id);
 
-      if (order) {
-        // ✅ mark as paid
-        await supabase
+        // 🔒 verify payment
+        if (session.payment_status !== "paid") {
+          console.log("⚠️ Payment not completed");
+          return res.status(200).json({ received: true });
+        }
+
+        const { data: order, error } = await supabase
           .from("orders")
-          .update({ status: "paid" })
-          .eq("id", order.id);
+          .select("*")
+          .eq("stripe_session_id", session.id)
+          .single();
 
-        // ✅ clear cart
-        await supabase
-          .from("carts")
-          .update({ items: [] })
-          .eq("id", order.cart_id);
+        if (error || !order) {
+          console.error("Order not found");
+          return res.status(404).send("Order not found");
+        }
+
+        // 🔒 idempotency protection
+        if (order.status !== "paid") {
+          await supabase
+            .from("orders")
+            .update({ status: "paid" })
+            .eq("id", order.id);
+
+          await supabase
+            .from("carts")
+            .update({ items: [] })
+            .eq("id", order.cart_id);
+
+          console.log("Order marked as paid & cart cleared");
+        } else {
+          console.log("Order already processed");
+        }
       }
-    }
 
-    res.status(200).json({ received: true });
+      res.status(200).json({ received: true });
+    } catch (err) {
+      console.error("Webhook processing error:", err);
+      res.status(500).send("Webhook failed");
+    }
   },
 );
 
