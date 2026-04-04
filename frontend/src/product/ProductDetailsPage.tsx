@@ -10,7 +10,7 @@ export function ProductDetailsPage({ product }: { product: Product }) {
   //       ? "Graphic Design"
   //       : "Web Development";
   const tag = product.tag;
-  const priceLabel = product.price === 0 ? "Pre-Odredr" : `${product.price} SAR`;
+  const priceLabel = product.price === 0 ? "Pre-Order" : `${product.price} SAR`;
 
   return (
     <div className="productDetailsPage">

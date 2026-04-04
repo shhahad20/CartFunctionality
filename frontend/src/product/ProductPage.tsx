@@ -8,14 +8,8 @@ export function ProductPage({
   product: Product;
   onClose: () => void;
 }) {
-  // const category =
-  //   product.name.includes("UI")
-  //     ? "UI Design"
-  //     : product.name.includes("Brand")
-  //       ? "Graphic Design"
-  //       : "Web Development";
+
   const tag = product.tag;
-  console.log("🚀 ~ file: ProductPage.tsx:11 ~ ProductPage ~ tag:", tag);
   const priceLabel = product.price === 0 ? "Pre-Order" : `${product.price} SAR`;
 
   return (

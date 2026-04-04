@@ -1,6 +1,4 @@
-/* ── Cart System Styles ── */
-/* Import in your global CSS or component */
-
+/* ── Cart System Styles ── */ 
 :root {
     --cart-accent: #333333;
     --cart-accent-light: #000000;
@@ -168,8 +166,8 @@
     flex-direction: column;
     gap: 4px;
   }
-  .cart-item__name { font-size: 14px; font-weight: 600; color: var(--cart-text); }
-  .cart-item__price { font-size: 14px; color: var(--cart-highlight); font-weight: 700; }
+  .cart-item__name { font-size: 14px; font-weight: 500; color: var(--cart-text); }
+  .cart-item__price { font-size: 14px; color: var(--cart-text); font-weight: 700; }
   .cart-item__controls {
     display: flex;
     align-items: center;
@@ -188,7 +186,7 @@
     transition: background 0.15s;
   }
   .cart-item__controls button:hover { background: #ddd; }
-  .cart-item__controls span { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+  .cart-item__controls span { font-size: 14px; font-weight: 500; min-width: 20px; text-align: center; color: var(--cart-text); }
   .cart-item__remove {
     background: none; border: none;
     color: var(--cart-muted); cursor: pointer;
@@ -216,7 +214,7 @@
   .cart-summary__checkout {
     margin-top: 8px;
     padding: 14px;
-    background: var(--cart-highlight);
+    background: #1e1e1e;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -234,7 +232,7 @@
     padding: 8px; border-radius: 6px; cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
-  .cart-clear:hover { background: #fff0f3; color: var(--cart-highlight); border-color: var(--cart-highlight); }
+  .cart-clear:hover { background: white; color: var(--cart-highlight); border-color: var(--cart-highlight); }
 
   .checkout-overlay {
   position: fixed;
@@ -257,6 +255,10 @@
 
 .checkout-modal h2 {
   margin-bottom: 8px;
+  color: var(--cart-text);
+}
+.checkout-modal p {
+  color: var(--cart-text);
 }
 
 .checkout-modal input {
@@ -285,6 +287,7 @@
   background: none;
   border: none;
   font-size: 18px;
+  cursor: pointer;
 }
 
 .checkout-error {

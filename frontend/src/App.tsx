@@ -42,23 +42,13 @@ function ProductCard({
             <h3 className="cardTitle">{product.name}</h3>
           </div>
           <span className="cardBadge">
-            {/* {product.name.includes("UI")
-              ? "UI Design"
-              : product.name.includes("Brand")
-                ? "Graphic Design"
-                : "Web Development"} */}
                 {product.tag}
           </span>
-          {/* <div className="cardMeta">
-            <button className="pricePill" type="button">
-              {product.price === 0 ? "Pre-Order" : `${product.price} SAR`}
-            </button>
-          </div> */}
         </div>
 
         <div className="cardFooter">
           <div className="cardFooterPrice">
-            {product.price === 0 ? "Pre-Odredr" : `${product.price} SAR`}
+            {product.price === 0 ? "Pre-Order" : `${product.price} SAR`}
           </div>
         </div>
       </div>

@@ -60,17 +60,6 @@ router.post(
           .update({ items: [] })
           .eq("id", order.cart_id);
       }
-      //  Update order in DB
-      // const { error } = await supabase
-      //   .from("orders")
-      //   .update({ status: "paid" })
-      //   .eq("stripe_session_id", session.id);
-
-      // if (error) {
-      //   console.error("❌ Failed to update order:", error);
-      // } else {
-      //   console.log("✅ Order marked as PAID");
-      // }
     }
 
     res.status(200).json({ received: true });
