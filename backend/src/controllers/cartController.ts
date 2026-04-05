@@ -17,13 +17,14 @@ export class SupabaseCartStore implements CartStore {
       .from("carts")
       .select("*")
       .eq("id", cartId)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
+    if (!data) {
       const newCart: Cart = {
         id: cartId,
         items: [],
-        updatedAt: Date.now(),
+        // 🔺🔺 Check this timestamp later 🔺🔺
+        updatedAt: Date.now(), // the filed in the db is "updated_at" but we map it to "updatedAt" in the Cart interface
       };
 
       await this.save(cartId, newCart);
@@ -112,7 +113,7 @@ export class CartService {
     productId: string,
     quantity: number,
   ): Promise<Cart> {
-    if (quantity < 1) return this.removeItem(cartId, productId);
+    if (quantity == null || quantity < 1) return this.removeItem(cartId, productId);
 
     const cart = await this.store.get(cartId);
     const item = cart.items.find((i) => i.productId === productId);
@@ -121,7 +122,11 @@ export class CartService {
   }
 
   async clearCart(cartId: string): Promise<void> {
-    return this.store.delete(cartId);
+    await this.store.save(cartId, {
+    id: cartId,
+    items: [],
+    updatedAt: Date.now(),
+  });
   }
 
   async mergeGuestCart(userId: string, guestItems: CartItem[]): Promise<Cart> {

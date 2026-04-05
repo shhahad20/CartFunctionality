@@ -6,7 +6,8 @@ const router = Router();
 
 router.post("/", async (req, res) => {
   try {
-    const { cartId, email } = req.body;
+    const { email } = req.body;
+    const cartId = req.headers["x-cart-id"] as string;
 
     // Validate input
     if (!cartId || !email || !email.includes("@")) {
@@ -16,8 +17,10 @@ router.post("/", async (req, res) => {
     // Fetch cart from DB
     const { data: cart, error: cartError } = await supabase
       .from("carts")
+      .update({ status: "locked" })
       .select("*")
       .eq("id", cartId)
+      .eq("owner_id", cartId)
       .single();
 
     if (cartError || !cart) {
@@ -27,7 +30,13 @@ router.post("/", async (req, res) => {
     if (!cart.items || cart.items.length === 0) {
       return res.status(400).json({ error: "Cart is empty" });
     }
-
+    if (cart.owner_id !== cartId) {
+      return res.status(403).json({ error: "Unauthorized cart access" });
+    }
+    if (cart.status === "locked") {
+      return res.status(400).json({ error: "Cart already used" });
+    }
+    
     console.log("🛒 Cart:", cart.items); // 🔺TO BE DELETED LATER🔺
 
     // Re-fetch products from DB
@@ -53,14 +62,13 @@ router.post("/", async (req, res) => {
           },
           quantity: item.quantity,
         };
-      })
+      }),
     );
 
     // Calculate total
     const total = line_items.reduce(
-      (sum, item) =>
-        sum + item.price_data.unit_amount * item.quantity,
-      0
+      (sum, item) => sum + item.price_data.unit_amount * item.quantity,
+      0,
     );
 
     if (total <= 0) {
@@ -91,7 +99,7 @@ router.post("/", async (req, res) => {
       },
       {
         idempotencyKey: cartId, //prevent duplicate sessions
-      }
+      },
     );
 
     // Saving order BEFORE payment confirmation
@@ -99,7 +107,7 @@ router.post("/", async (req, res) => {
       cart_id: cartId,
       email,
       items: cart.items,
-      amount: total, 
+      amount: total,
       status: "pending",
       stripe_session_id: session.id,
     });
@@ -112,7 +120,6 @@ router.post("/", async (req, res) => {
     console.log("✅ Stripe session created:", session.id);
 
     res.json({ url: session.url });
-
   } catch (err) {
     console.error("❌ Checkout error:", err);
     res.status(500).json({ error: "Checkout failed" });

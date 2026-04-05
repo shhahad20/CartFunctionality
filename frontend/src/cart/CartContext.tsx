@@ -139,15 +139,19 @@ export function CartProvider({
   }, [cartId]);
   // Headers only change when cartId changes.
 
-  // Dependency chain: cartId → headers → fetchCart
-
   const fetchCart = useCallback(async (): Promise<void> => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       if (!headers) return;
       const res = await fetch(`${apiBase}`, { headers });
+      // handle 404 or empty cart
+      if (res.status === 404) {
+        dispatch({ type: "SET_CART", payload: [] });
+        return;
+      }
+      
       const data = await res.json();
-      dispatch({ type: "SET_CART", payload: data.items });
+      dispatch({ type: "SET_CART", payload: data.items ?? [], });
     } catch (err) {
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
     }
@@ -202,7 +206,7 @@ export function CartProvider({
       };
 
       dispatch({ type: "ADD_TO_CART", payload: optimistic });
-      
+
       try {
         if (!headers) return;
         const res = await fetch(`${apiBase}/items`, {
@@ -238,7 +242,7 @@ export function CartProvider({
         fetchCart();
       }
     },
-    [apiBase, headers],
+    [apiBase, headers, fetchCart],
   );
 
   const updateQuantity = useCallback(

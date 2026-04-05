@@ -123,10 +123,10 @@ function App() {
   const handleCheckout = () => {
     setCheckoutOpen(true);
   };
-
+ 
   return (
     <BrowserRouter>
-      <CartProvider apiBase="http://localhost:4000/api/cart" userId="user_123">
+      <CartProvider apiBase="http://localhost:4000/api/cart">
         <div className="shopPage">
           <nav className="topNav">
             <div className="brandMark">Services</div>

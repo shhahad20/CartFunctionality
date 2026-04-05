@@ -16,7 +16,7 @@ type AuthRequest = Request & { userId: string };
 type CartRequest = Request & { cartId: string };
 
 function requireCart(req: Request, res: Response, next: NextFunction): void {
-  const cartId = req.headers["x-cart-id"];
+  const cartId = req.headers["x-cart-id"] as string;
 
   if (!cartId || typeof cartId !== "string") {
     res.status(400).json({ error: "Missing cartId" });
@@ -37,11 +37,17 @@ export function createCartRouter(cartService: CartService): Router {
   // GET /api/cart
   router.get("/", async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log("Hi Cart🛒");
       const cartId = (req as CartRequest).cartId;
+      if (!cartId) {
+        res.status(400).json({ error: "Missing cartId" });
+        return;
+      }
+
       const cart = await cartService.getCart(cartId);
+
       res.json({ items: cart.items });
     } catch (err) {
+      console.error("GET /cart error:", err); // 🔺TO BE DELETED LATER🔺
       res.status(500).json({ error: (err as Error).message });
     }
   });
@@ -68,7 +74,7 @@ export function createCartRouter(cartService: CartService): Router {
 
       res.status(200).json({ items: cart.items });
     } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
