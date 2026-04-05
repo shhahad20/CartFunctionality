@@ -22,7 +22,7 @@ export interface Product {
     userId?: string;
     items: CartItem[];
     // updatedAt?: Date;
-    updatedAt: number;
+    updatedAt: Date;
   }
   
   export interface CartTotals {

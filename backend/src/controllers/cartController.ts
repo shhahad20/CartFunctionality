@@ -23,8 +23,7 @@ export class SupabaseCartStore implements CartStore {
       const newCart: Cart = {
         id: cartId,
         items: [],
-        // 🔺🔺 Check this timestamp later 🔺🔺
-        updatedAt: Date.now(), // the filed in the db is "updated_at" but we map it to "updatedAt" in the Cart interface
+        updatedAt: new Date(),
       };
 
       await this.save(cartId, newCart);
@@ -34,21 +33,29 @@ export class SupabaseCartStore implements CartStore {
     let cart: Cart = {
       id: data.id,
       items: data.items,
-      updatedAt: data.updated_at,
+      updatedAt: new Date(data.updated_at),
     };
 
-    const isExpired = Date.now() - cart.updatedAt > CART_TTL;
+    const isExpired = Date.now() - cart.updatedAt.getTime() > CART_TTL;
 
     if (isExpired) {
-      cart = { id: cartId, items: [], updatedAt: Date.now() };
-      await this.save(cartId, cart);
+      console.log("Cart expired:", cartId);
+
+      const newCart: Cart = {
+        id: cartId,
+        items: [],
+        updatedAt: new Date(),
+      };
+
+      await this.save(cartId, newCart);
+      return newCart;
     }
 
     return cart;
   }
 
   async save(cartId: string, cart: Cart): Promise<Cart> {
-    cart.updatedAt = Date.now();
+    cart.updatedAt = new Date();
 
     const { error } = await supabase.from("carts").upsert({
       id: cartId,
@@ -113,7 +120,8 @@ export class CartService {
     productId: string,
     quantity: number,
   ): Promise<Cart> {
-    if (quantity == null || quantity < 1) return this.removeItem(cartId, productId);
+    if (quantity == null || quantity < 1)
+      return this.removeItem(cartId, productId);
 
     const cart = await this.store.get(cartId);
     const item = cart.items.find((i) => i.productId === productId);
@@ -123,10 +131,10 @@ export class CartService {
 
   async clearCart(cartId: string): Promise<void> {
     await this.store.save(cartId, {
-    id: cartId,
-    items: [],
-    updatedAt: Date.now(),
-  });
+      id: cartId,
+      items: [],
+      updatedAt: new Date(),
+    });
   }
 
   async mergeGuestCart(userId: string, guestItems: CartItem[]): Promise<Cart> {
