@@ -4,6 +4,7 @@ export interface CartItem{
     price: number;
     image?: string;
     quantity: number;
+    token?: string; // for backend to send updated token if needed
 }
 export interface Product{
     id: string;
