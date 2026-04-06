@@ -18,10 +18,11 @@ type CartRequest = Request & { cartId: string };
 
 function requireCart(req: Request, res: Response, next: NextFunction): void {
   // const cartId = req.headers["x-cart-id"] as string;
-  const token = req.headers["x-cart-token"] as string;
-  if (!token) {
-    res.status(401).json({ error: "Missing cart token" });
-    return;
+  const token = req.headers["x-cart-token"];
+
+  if (!token || typeof token !== "string") {
+    (req as CartRequest).cartId = crypto.randomUUID();
+    return next();
   }
 
   // if (!cartId || typeof cartId !== "string") {
@@ -50,11 +51,6 @@ export function createCartRouter(cartService: CartService): Router {
   router.get("/", async (req: Request, res: Response): Promise<void> => {
     try {
       const cartId = (req as CartRequest).cartId;
-      if (!cartId) {
-        res.status(400).json({ error: "Missing cartId" });
-        return;
-      }
-
       const cart = await cartService.getCart(cartId);
       const token = signCartToken(cart.id);
 
@@ -84,7 +80,7 @@ export function createCartRouter(cartService: CartService): Router {
         productId,
         quantity,
       });
-const token = signCartToken(cart.id);
+      const token = signCartToken(cart.id);
       res.status(200).json({ items: cart.items, token });
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
@@ -98,8 +94,8 @@ const token = signCartToken(cart.id);
       const { quantity } = req.body as UpdateQuantityRequest;
       const cartId = (req as CartRequest).cartId;
 
-      if (quantity == null) {
-        res.status(400).json({ error: "quantity is required" });
+      if (quantity == null || quantity < 1) {
+        res.status(400).json({ error: "quantity must be >= 1" });
         return;
       }
 
