@@ -263,6 +263,49 @@
   z-index: 50;
 }
 
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 50;
+}
+
+.auth-modal {
+  width: min(420px, 100%);
+  background: rgba(21, 21, 21, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-modal input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.auth-modal button {
+  min-height: 44px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-modal button + button {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .productPageModal {
   width: min(980px, 100%);
   background: rgba(21, 21, 21, 0.92);

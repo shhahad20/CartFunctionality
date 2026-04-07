@@ -12,7 +12,7 @@ import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 import SuccessPage from "./components/SuccessPage.tsx";
-
+import { AuthModal } from "./components/AuthModal.tsx";
 
 function ProductCard({
   product,
@@ -41,9 +41,7 @@ function ProductCard({
           <div className="product-cat">
             <h3 className="cardTitle">{product.name}</h3>
           </div>
-          <span className="cardBadge">
-                {product.tag}
-          </span>
+          <span className="cardBadge">{product.tag}</span>
         </div>
 
         <div className="cardFooter">
@@ -119,11 +117,28 @@ function ProductDetailsRoute() {
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const handleCheckout = () => {
     setCheckoutOpen(true);
   };
- 
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  fetch("http://localhost:4000/auth/me", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((user) => setUser(user))
+    .catch(() => {
+      localStorage.removeItem("token");
+    });
+}, []);
+
   return (
     <BrowserRouter>
       <CartProvider apiBase="http://localhost:4000/api/cart">
@@ -132,6 +147,16 @@ function App() {
             <div className="brandMark">Digital Services</div>
 
             <div className="navRight">
+              {user ? (
+                <button className="navBtn" onClick={() => setUser(null)}>
+                  Logout
+                </button>
+              ) : (
+                <button className="navBtn" onClick={() => setAuthOpen(true)}>
+                  Login
+                </button>
+              )}
+
               <CartToggle onClick={() => setDrawerOpen(true)} />
             </div>
           </nav>
@@ -150,6 +175,11 @@ function App() {
           <CheckoutModal
             open={checkoutOpen}
             onClose={() => setCheckoutOpen(false)}
+          />
+          <AuthModal
+            open={authOpen}
+            onClose={() => setAuthOpen(false)}
+            onLogin={(user) => setUser(user)}
           />
         </div>
       </CartProvider>
