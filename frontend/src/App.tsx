@@ -129,7 +129,7 @@ function App() {
       <CartProvider apiBase="http://localhost:4000/api/cart">
         <div className="shopPage">
           <nav className="topNav">
-            <div className="brandMark">Services</div>
+            <div className="brandMark">Digital Services</div>
 
             <div className="navRight">
               <CartToggle onClick={() => setDrawerOpen(true)} />
