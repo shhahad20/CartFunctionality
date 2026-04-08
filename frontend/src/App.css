@@ -44,7 +44,7 @@
   background: none;
   border: none;
   width: 32px;
-
+  cursor: pointer;
 }
 .productsGrid {
   display: grid;

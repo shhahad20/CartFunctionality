@@ -7,14 +7,14 @@ import {
   useParams,
 } from "react-router-dom";
 import { CartProvider, CartDrawer, CartToggle } from "./cart";
-import {  useAuth } from "./auth/AuthProvider";
+import { useAuth } from "./auth/AuthProvider";
 import type { Product } from "./types/types";
 import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 import SuccessPage from "./components/SuccessPage.tsx";
 import { AuthModal } from "./components/AuthModal.tsx";
-import { LogOut } from 'lucide-react';
+import { LogOut, UserRound } from "lucide-react";
 
 function ProductCard({
   product,
@@ -141,50 +141,47 @@ function App() {
 
   return (
     <BrowserRouter>
-        <CartProvider apiBase="http://localhost:4000/api/cart">
-          <div className="shopPage">
-            <nav className="topNav">
-              <div className="brandMark">Digital Services</div>
+      <CartProvider apiBase="http://localhost:4000/api/cart">
+        <div className="shopPage">
+          <nav className="topNav">
+            <div className="brandMark">Digital Services</div>
 
-              <div className="navRight">
-                {user ? (
-                  <>
-                    <span>{user.email}</span>
-                    <button className="navBtn" onClick={logout}>
-                      <LogOut />
-                    </button>
-                  </>
-                ) : (
-                  <button className="navBtn" onClick={() => setAuthOpen(true)}>
-                    Login
+            <div className="navRight">
+              {user ? (
+                <>
+                  <span>{user.email}</span>
+                  <button className="navBtn" onClick={logout}>
+                    <LogOut />
                   </button>
-                )}
+                </>
+              ) : (
+                <button className="navBtn" onClick={() => setAuthOpen(true)}>
+                  <UserRound />
+                </button>
+              )}
 
-                <CartToggle onClick={() => setDrawerOpen(true)} />
-              </div>
-            </nav>
+              <CartToggle onClick={() => setDrawerOpen(true)} />
+            </div>
+          </nav>
 
-            <Routes>
-              <Route path="/" element={<ProductsHome />} />
-              <Route path="/product/:id" element={<ProductDetailsRoute />} />
-              <Route path="/success" element={<SuccessPage />} />
-            </Routes>
+          <Routes>
+            <Route path="/" element={<ProductsHome />} />
+            <Route path="/product/:id" element={<ProductDetailsRoute />} />
+            <Route path="/success" element={<SuccessPage />} />
+          </Routes>
 
-            <CartDrawer
-              open={drawerOpen}
-              onClose={() => setDrawerOpen(false)}
-              onCheckout={handleCheckout}
-            />
-            <CheckoutModal
-              open={checkoutOpen}
-              onClose={() => setCheckoutOpen(false)}
-            />
-            <AuthModal
-              open={authOpen}
-              onClose={() => setAuthOpen(false)}
-            />
-          </div>
-        </CartProvider>
+          <CartDrawer
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            onCheckout={handleCheckout}
+          />
+          <CheckoutModal
+            open={checkoutOpen}
+            onClose={() => setCheckoutOpen(false)}
+          />
+          <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+        </div>
+      </CartProvider>
     </BrowserRouter>
   );
 }
