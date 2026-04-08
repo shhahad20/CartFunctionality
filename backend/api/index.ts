@@ -10,6 +10,7 @@ import checkoutRouter from "../src/routers/checkoutRouter.js";
 import productRouter from "../src/routers/productRouter.js";
 import webhook from "../src/routers/webhook.js";
 import orderRouter from "../src/routers/orderRouter.js";
+import authRouter from "../src/routers/authRouter.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/cart/checkout', checkoutRouter, rateLimit({
 }));
 app.use('/api/products', productRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/auth", authRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "Node",
-"outDir": "./dist",  // Ensure this is set to your desired output directory
+    "outDir": "./dist",  // Ensure this is set to your desired output directory
     "rootDir": "./",    // Set to include files from the root directory and subdirectories
     "strict": true,
     "esModuleInterop": true,

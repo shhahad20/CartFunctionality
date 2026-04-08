@@ -78,3 +78,27 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   // user comes from middleware
   res.json(req.user);
 };
+
+export const refresh = async (req: Request, res: Response) => {
+  try {
+    const { refresh_token } = req.body;
+
+    if (!refresh_token) {
+      return res.status(400).json({ error: "Refresh token required" });
+    }
+
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token });
+
+    if (error || !data.session) {
+      return res.status(401).json({ error: "Invalid or expired refresh token" });
+    }
+
+    res.json({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      user: data.user,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+};

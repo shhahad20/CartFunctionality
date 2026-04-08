@@ -127,7 +127,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch("http://localhost:4000/auth/me", {
+    fetch("http://localhost:4000/api/auth/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
