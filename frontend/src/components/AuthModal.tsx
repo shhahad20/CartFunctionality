@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { useAuth } from "../auth/AuthProvider";
+
 
 type AuthModalProps = {
   open: boolean;
   onClose: () => void;
-  onLogin: (user: unknown) => void;
+  // onLogin: (user: unknown) => void;
 };
 
 export function AuthModal(props: AuthModalProps) {
+    const { login, register } = useAuth();
+
  const [mode, setMode] = useState<"login" | "register">("login");
 
   const [email, setEmail] = useState("");
@@ -15,54 +19,19 @@ export function AuthModal(props: AuthModalProps) {
 
   if (!open) return null;
 
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
     try {
       setLoading(true);
 
-      const endpoint =
-        mode === "login"
-          ? "http://localhost:4000/auth/login"
-          : "http://localhost:4000/auth/register";
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
-
-      // 🔥 IMPORTANT: auto-login after register
-      if (mode === "register") {
-        // call login again
-        const loginRes = await fetch("http://localhost:4000/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const loginData = await loginRes.json();
-
-        localStorage.setItem("token", loginData.access_token);
-        props.onLogin(loginData.user);
+      if (mode === "login") {
+        await login(email, password);
       } else {
-        localStorage.setItem("token", data.access_token);
-        props.onLogin(data.user);
+        await register(email, password);
       }
 
       props.onClose();
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+      alert(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -87,23 +56,13 @@ export function AuthModal(props: AuthModalProps) {
         />
 
         <button onClick={handleSubmit} disabled={loading}>
-          {loading
-            ? "Loading..."
-            : mode === "login"
-            ? "Login"
-            : "Register"}
+          {loading ? "Loading..." : mode === "login" ? "Login" : "Register"}
         </button>
 
-        {/* 🔁 Toggle */}
-        <p style={{ fontSize: 14 }}>
-          {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-          <span
-            style={{ color: "blue", cursor: "pointer" }}
-            onClick={() =>
-              setMode(mode === "login" ? "register" : "login")
-            }
-          >
-            {mode === "login" ? "Register" : "Login"}
+        <p>
+          {mode === "login" ? "Don't have an account?" : "Already have an account?"}
+          <span onClick={() => setMode(mode === "login" ? "register" : "login")}>
+            {mode === "login" ? " Register" : " Login"}
           </span>
         </p>
 

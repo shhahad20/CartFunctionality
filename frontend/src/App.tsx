@@ -7,6 +7,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { CartProvider, CartDrawer, CartToggle } from "./cart";
+import {  useAuth } from "./auth/AuthProvider";
 import type { Product } from "./types/types";
 import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
@@ -117,72 +118,72 @@ function ProductDetailsRoute() {
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
-
+  const { user, logout } = useAuth();
   const handleCheckout = () => {
     setCheckoutOpen(true);
   };
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  fetch("http://localhost:4000/auth/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((user) => setUser(user))
-    .catch(() => {
-      localStorage.removeItem("token");
-    });
-}, []);
+    fetch("http://localhost:4000/auth/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .catch(() => {
+        localStorage.removeItem("token");
+      });
+  }, []);
 
   return (
     <BrowserRouter>
-      <CartProvider apiBase="http://localhost:4000/api/cart">
-        <div className="shopPage">
-          <nav className="topNav">
-            <div className="brandMark">Digital Services</div>
+        <CartProvider apiBase="http://localhost:4000/api/cart">
+          <div className="shopPage">
+            <nav className="topNav">
+              <div className="brandMark">Digital Services</div>
 
-            <div className="navRight">
-              {user ? (
-                <button className="navBtn" onClick={() => setUser(null)}>
-                  Logout
-                </button>
-              ) : (
-                <button className="navBtn" onClick={() => setAuthOpen(true)}>
-                  Login
-                </button>
-              )}
+              <div className="navRight">
+                {user ? (
+                  <>
+                    <span>{user.email}</span>
+                    <button className="navBtn" onClick={logout}>
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <button className="navBtn" onClick={() => setAuthOpen(true)}>
+                    Login
+                  </button>
+                )}
 
-              <CartToggle onClick={() => setDrawerOpen(true)} />
-            </div>
-          </nav>
+                <CartToggle onClick={() => setDrawerOpen(true)} />
+              </div>
+            </nav>
 
-          <Routes>
-            <Route path="/" element={<ProductsHome />} />
-            <Route path="/product/:id" element={<ProductDetailsRoute />} />
-            <Route path="/success" element={<SuccessPage />} />
-          </Routes>
+            <Routes>
+              <Route path="/" element={<ProductsHome />} />
+              <Route path="/product/:id" element={<ProductDetailsRoute />} />
+              <Route path="/success" element={<SuccessPage />} />
+            </Routes>
 
-          <CartDrawer
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            onCheckout={handleCheckout}
-          />
-          <CheckoutModal
-            open={checkoutOpen}
-            onClose={() => setCheckoutOpen(false)}
-          />
-          <AuthModal
-            open={authOpen}
-            onClose={() => setAuthOpen(false)}
-            onLogin={(user) => setUser(user)}
-          />
-        </div>
-      </CartProvider>
+            <CartDrawer
+              open={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+              onCheckout={handleCheckout}
+            />
+            <CheckoutModal
+              open={checkoutOpen}
+              onClose={() => setCheckoutOpen(false)}
+            />
+            <AuthModal
+              open={authOpen}
+              onClose={() => setAuthOpen(false)}
+            />
+          </div>
+        </CartProvider>
     </BrowserRouter>
   );
 }
