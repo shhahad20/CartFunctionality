@@ -262,7 +262,7 @@
   padding: 18px;
   z-index: 50;
 }
-
+/* _________ Auth Modal ________ */
 .auth-modal-overlay {
   position: fixed;
   inset: 0;
@@ -271,7 +271,7 @@
   align-items: center;
   justify-content: center;
   padding: 18px;
-  z-index: 50;
+  z-index: 9999;
 }
 
 .auth-modal {
@@ -305,7 +305,7 @@
 .auth-modal button + button {
   background: rgba(255, 255, 255, 0.08);
 }
-
+/* _________ Auth Modal ________ */
 .productPageModal {
   width: min(980px, 100%);
   background: rgba(21, 21, 21, 0.92);

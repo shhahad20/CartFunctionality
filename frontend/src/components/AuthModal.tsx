@@ -8,7 +8,7 @@ type AuthModalProps = {
   // onLogin: (user: unknown) => void;
 };
 
-export function AuthModal(props: AuthModalProps) {
+export function AuthModal({ open, onClose }: AuthModalProps) {
     const { login, register } = useAuth();
 
  const [mode, setMode] = useState<"login" | "register">("login");
@@ -29,7 +29,7 @@ export function AuthModal(props: AuthModalProps) {
         await register(email, password);
       }
 
-      props.onClose();
+      onClose();
     } catch (err) {
       alert(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -38,8 +38,8 @@ export function AuthModal(props: AuthModalProps) {
   };
 
   return (
-    <div className="modalOverlay">
-      <div className="modal">
+    <div className="auth-modal-overlay">
+      <div className="auth-modal">
         <h2>{mode === "login" ? "Login" : "Create Account"}</h2>
 
         <input
@@ -66,7 +66,7 @@ export function AuthModal(props: AuthModalProps) {
           </span>
         </p>
 
-        <button onClick={props.onClose}>Cancel</button>
+        <button onClick={onClose}>Cancel</button>
       </div>
     </div>
   );
