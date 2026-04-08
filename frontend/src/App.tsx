@@ -14,6 +14,7 @@ import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 import SuccessPage from "./components/SuccessPage.tsx";
 import { AuthModal } from "./components/AuthModal.tsx";
+import { LogOut } from 'lucide-react';
 
 function ProductCard({
   product,
@@ -150,7 +151,7 @@ function App() {
                   <>
                     <span>{user.email}</span>
                     <button className="navBtn" onClick={logout}>
-                      Logout
+                      <LogOut />
                     </button>
                   </>
                 ) : (

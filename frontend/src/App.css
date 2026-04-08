@@ -38,9 +38,14 @@
 .navRight {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
+.navBtn{
+  background: none;
+  border: none;
+  width: 32px;
 
+}
 .productsGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
