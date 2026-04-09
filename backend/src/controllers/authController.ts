@@ -7,15 +7,24 @@ interface AuthRequest extends Request {
 }
 //______________AUTH MIDDLEWARE____________________________
 
-export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const protect = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const authHeader = req.headers.authorization;
+    // const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    // if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    //   return res.status(401).json({ error: "Unauthorized" });
+    // }
+
+    // const token = authHeader.split(" ")[1];
+    const token = req.cookies.token;
+
+    if (!token) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-
-    const token = authHeader.split(" ")[1];
 
     const { data, error } = await supabase.auth.getUser(token);
 
@@ -31,10 +40,12 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
   }
 };
 // _____________ AUTH CONTROLLER ____________________________
-export const register = async (req:Request, res:Response) => {
+export const register = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -45,7 +56,7 @@ export const register = async (req:Request, res:Response) => {
     res.json({
       message: "User created",
       user: data.user,
-      session: data.session,
+      // session: data.session,
     });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
@@ -56,6 +67,9 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -63,15 +77,30 @@ export const login = async (req: Request, res: Response) => {
 
     if (error) return res.status(401).json({ error: error.message });
 
+    res.cookie("token", data.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+
     res.json({
       message: "Logged in",
       user: data.user,
-      session: data.session,
-      access_token: data.session.access_token,
+      // session: data.session,
+      // access_token: data.session.access_token,
     });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "lax",
+  });
+  res.json({ message: "Logged out" });
 };
 
 export const getMe = async (req: AuthRequest, res: Response) => {
@@ -79,26 +108,30 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   res.json(req.user);
 };
 
-export const refresh = async (req: Request, res: Response) => {
-  try {
-    const { refresh_token } = req.body;
+// export const refresh = async (req: Request, res: Response) => {
+//   try {
+//     const { refresh_token } = req.body;
 
-    if (!refresh_token) {
-      return res.status(400).json({ error: "Refresh token required" });
-    }
+//     if (!refresh_token) {
+//       return res.status(400).json({ error: "Refresh token required" });
+//     }
 
-    const { data, error } = await supabase.auth.refreshSession({ refresh_token });
+//     const { data, error } = await supabase.auth.refreshSession({
+//       refresh_token,
+//     });
 
-    if (error || !data.session) {
-      return res.status(401).json({ error: "Invalid or expired refresh token" });
-    }
+//     if (error || !data.session) {
+//       return res
+//         .status(401)
+//         .json({ error: "Invalid or expired refresh token" });
+//     }
 
-    res.json({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      user: data.user,
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-};
+//     res.json({
+//       access_token: data.session.access_token,
+//       refresh_token: data.session.refresh_token,
+//       user: data.user,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };

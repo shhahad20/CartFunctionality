@@ -120,24 +120,14 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, restoreSession } = useAuth();
   const handleCheckout = () => {
     setCheckoutOpen(true);
   };
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
 
-    fetch("http://localhost:4000/api/auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .catch(() => {
-        localStorage.removeItem("token");
-      });
-  }, []);
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
 
   return (
     <BrowserRouter>

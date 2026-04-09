@@ -11,6 +11,7 @@ import productRouter from "../src/routers/productRouter.js";
 import webhook from "../src/routers/webhook.js";
 import orderRouter from "../src/routers/orderRouter.js";
 import authRouter from "../src/routers/authRouter.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use("/api/webhook", webhook);
 app.use(express.json());
 
-
+app.use(cookieParser());
 app.use('/', homeRouter)
 // Swap InMemoryCartStore → MongoCartStore or RedisCartStore in production
 const cartService = new CartService(new SupabaseCartStore());
