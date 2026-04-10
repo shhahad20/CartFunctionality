@@ -11,29 +11,23 @@ import { signCartToken, verifyCartToken } from "../helper/jwt.js";
 // ─── Typed request helpers ────────────────────────────────────────
 
 type AuthRequest = Request & { userId: string };
-
-// ─── Auth middleware ──────────────────────────────────────────────
-
 type CartRequest = Request & { cartId: string };
 
+// ─── Middleware ─────────────────────────────────────────────
+
 function requireCart(req: Request, res: Response, next: NextFunction): void {
-  // const cartId = req.headers["x-cart-id"] as string;
-  const token = req.headers["x-cart-token"];
+  let cartId = req.cookies.cartId;
 
-  if (!token || typeof token !== "string") {
-    (req as CartRequest).cartId = crypto.randomUUID();
-    return next();
-  }
-
-  // if (!cartId || typeof cartId !== "string") {
-  //   res.status(400).json({ error: "Missing cartId" });
-  //   return;
-  // }
-  const cartId = verifyCartToken(token);
-
+  // 🆕 First-time visitor → create cartId cookie
   if (!cartId) {
-    res.status(401).json({ error: "Invalid cart token" });
-    return;
+    cartId = crypto.randomUUID();
+
+    res.cookie("cartId", cartId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
   }
 
   (req as CartRequest).cartId = cartId;
@@ -51,10 +45,13 @@ export function createCartRouter(cartService: CartService): Router {
   router.get("/", async (req: Request, res: Response): Promise<void> => {
     try {
       const cartId = (req as CartRequest).cartId;
-      const cart = await cartService.getCart(cartId);
-      const token = signCartToken(cart.id);
 
-      res.json({ items: cart.items, token });
+      const cart = await cartService.getCart(cartId);
+      // const token = signCartToken(cart.id);
+
+      res.json({
+        items: cart?.items ?? [],
+      });
     } catch (err) {
       console.error("GET /cart error:", err); // 🔺TO BE DELETED LATER🔺
       res.status(500).json({ error: (err as Error).message });
@@ -80,8 +77,10 @@ export function createCartRouter(cartService: CartService): Router {
         productId,
         quantity,
       });
-      const token = signCartToken(cart.id);
-      res.status(200).json({ items: cart.items, token });
+
+      // const token = signCartToken(cart.id);
+      res.status(200).json({ items: cart.items });
+
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
@@ -105,8 +104,9 @@ export function createCartRouter(cartService: CartService): Router {
           (req.params as { productId: string }).productId,
           quantity,
         );
-        const token = signCartToken(cart.id);
-        res.json({ items: cart.items, token });
+        // const token = signCartToken(cart.id);
+        res.json({ items: cart.items });
+
       } catch (err) {
         res.status(500).json({ error: (err as Error).message });
       }
@@ -122,8 +122,8 @@ export function createCartRouter(cartService: CartService): Router {
           (req as CartRequest).cartId,
           (req.params as { productId: string }).productId,
         );
-        const token = signCartToken(cart.id);
-        res.json({ items: cart.items, token });
+        // const token = signCartToken(cart.id);
+        res.json({ items: cart.items });
       } catch (err) {
         res.status(500).json({ error: (err as Error).message });
       }
@@ -134,8 +134,9 @@ export function createCartRouter(cartService: CartService): Router {
   router.delete("/", async (req: Request, res: Response): Promise<void> => {
     try {
       await cartService.clearCart((req as CartRequest).cartId);
-      const token = signCartToken((req as CartRequest).cartId);
-      res.json({ items: [], token });
+      // const token = signCartToken((req as CartRequest).cartId);
+      res.json({ items: [] });
+      
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

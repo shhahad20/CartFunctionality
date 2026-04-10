@@ -4,7 +4,7 @@ import { getProductById } from "./productController.js";
 
 // ─── Storage interface ────────────────────────────────────────────
 export interface CartStore {
-  get(cartId: string): Promise<Cart>;
+  get(cartId: string): Promise<Cart | null>;
   save(cartId: string, cart: Cart): Promise<Cart>;
   delete(cartId: string): Promise<void>;
 }
@@ -12,47 +12,61 @@ export interface CartStore {
 // ─── In-memory adapter ────────────────────────────────────────────
 const CART_TTL = 1000 * 60 * 60 * 24; // 24h
 export class SupabaseCartStore implements CartStore {
-  async get(cartId: string): Promise<Cart> {
+  async get(cartId: string): Promise<Cart | null> {
     const { data, error } = await supabase
       .from("carts")
       .select("*")
       .eq("id", cartId)
       .maybeSingle();
 
-    if (!data) {
-      const newCart: Cart = {
-        id: cartId,
-        items: [],
-        updatedAt: new Date(),
-      };
+    if (error) throw error;
 
-      await this.save(cartId, newCart);
-      return newCart;
+    if (!data) {
+      return null; // ✅ DO NOT CREATE
     }
 
-    let cart: Cart = {
+    const cart: Cart = {
       id: data.id,
-      items: data.items,
+      items: data.items ?? [],
       updatedAt: new Date(data.updated_at),
     };
 
     const isExpired = Date.now() - cart.updatedAt.getTime() > CART_TTL;
 
     if (isExpired) {
-      console.log("Cart expired:", cartId);
-
-      const newCart: Cart = {
+      return {
         id: cartId,
         items: [],
         updatedAt: new Date(),
-      };
-
-      await this.save(cartId, newCart);
-      return newCart;
+      }; // ✅ DO NOT SAVE
     }
 
     return cart;
   }
+
+  //   let cart: Cart = {
+  //     id: data.id,
+  //     items: data.items,
+  //     updatedAt: new Date(data.updated_at),
+  //   };
+
+  //   const isExpired = Date.now() - cart.updatedAt.getTime() > CART_TTL;
+
+  //   if (isExpired) {
+  //     console.log("Cart expired:", cartId);
+
+  //     const newCart: Cart = {
+  //       id: cartId,
+  //       items: [],
+  //       updatedAt: new Date(),
+  //     };
+
+  //     await this.save(cartId, newCart);
+  //     return newCart;
+  //   }
+
+  //   return cart;
+  // }
 
   async save(cartId: string, cart: Cart): Promise<Cart> {
     cart.updatedAt = new Date();
@@ -80,7 +94,7 @@ export class SupabaseCartStore implements CartStore {
 export class CartService {
   constructor(private readonly store: CartStore) {}
 
-  async getCart(cartId: string): Promise<Cart> {
+  async getCart(cartId: string): Promise<Cart | null> {
     return this.store.get(cartId);
   }
 
@@ -88,11 +102,20 @@ export class CartService {
     cartId: string,
     { productId, quantity = 1 }: AddItemRequest,
   ): Promise<Cart> {
-    const cart = await this.store.get(cartId);
-    const idx = cart.items.findIndex((i) => i.productId === productId);
+    let cart = await this.store.get(cartId);
 
-    // 🔒 fetch real product from DB
+    // ✅ CREATE ONLY HERE
+    if (!cart) {
+      cart = {
+        id: cartId,
+        items: [],
+        updatedAt: new Date(),
+      };
+    }
+
     const product = await getProductById(productId);
+
+    const idx = cart.items.findIndex((i) => i.productId === productId);
 
     if (idx >= 0) {
       cart.items[idx].quantity += quantity;
@@ -100,7 +123,7 @@ export class CartService {
       cart.items.push({
         productId,
         name: product.name,
-        price: product.price, // ✅ trusted
+        price: product.price,
         image: product.image,
         quantity,
       });
@@ -111,6 +134,14 @@ export class CartService {
 
   async removeItem(cartId: string, productId: string): Promise<Cart> {
     const cart = await this.store.get(cartId);
+
+    if (!cart) {
+      return {
+        id: cartId,
+        items: [],
+        updatedAt: new Date(),
+      };
+    }
     cart.items = cart.items.filter((i) => i.productId !== productId);
     return this.store.save(cartId, cart);
   }
@@ -123,7 +154,11 @@ export class CartService {
     if (quantity == null || quantity < 1)
       return this.removeItem(cartId, productId);
 
-    const cart = await this.store.get(cartId);
+    const cart = (await this.store.get(cartId)) ?? {
+      id: cartId,
+      items: [],
+      updatedAt: new Date(),
+    };
     const item = cart.items.find((i) => i.productId === productId);
     if (item) item.quantity = quantity;
     return this.store.save(cartId, cart);
@@ -138,7 +173,15 @@ export class CartService {
   }
 
   async mergeGuestCart(userId: string, guestItems: CartItem[]): Promise<Cart> {
-    const cart = await this.store.get(userId);
+    let cart = await this.store.get(userId);
+
+    if (!cart) {
+      cart = {
+        id: userId,
+        items: [],
+        updatedAt: new Date(),
+      };
+    }
 
     for (const guestItem of guestItems) {
       const idx = cart.items.findIndex(
