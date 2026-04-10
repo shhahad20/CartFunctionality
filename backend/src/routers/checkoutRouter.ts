@@ -7,7 +7,8 @@ const router = Router();
 router.post("/", async (req, res) => {
   try {
     const { email } = req.body;
-    const cartId = req.headers["x-cart-id"] as string;
+    // const cartId = req.headers["x-cart-id"] as string;
+    const cartId = (req as any).cartId;
 
     // Validate input
     if (!cartId || !email || !email.includes("@")) {
@@ -17,7 +18,7 @@ router.post("/", async (req, res) => {
     // Fetch cart from DB
     const { data: cart, error: cartError } = await supabase
       .from("carts")
-      .update({ status: "locked" })
+      // .update({ status: "locked" })
       .select("*")
       .eq("id", cartId)
       .eq("owner_id", cartId)
@@ -26,18 +27,17 @@ router.post("/", async (req, res) => {
     if (cartError || !cart) {
       return res.status(500).json({ error: "Failed to fetch cart" });
     }
-
+    if (cart.status === "locked") {
+      return res.status(400).json({ error: "Cart already used" });
+    }
     if (!cart.items || cart.items.length === 0) {
       return res.status(400).json({ error: "Cart is empty" });
     }
     if (cart.owner_id !== cartId) {
       return res.status(403).json({ error: "Unauthorized cart access" });
     }
-    if (cart.status === "locked") {
-      return res.status(400).json({ error: "Cart already used" });
-    }
-    
-    console.log("🛒 Cart:", cart.items); // 🔺TO BE DELETED LATER🔺
+
+    await supabase.from("carts").update({ status: "locked" }).eq("id", cartId);
 
     // Re-fetch products from DB
     const line_items = await Promise.all(
@@ -98,7 +98,7 @@ router.post("/", async (req, res) => {
         cancel_url: "http://localhost:5173/cart",
       },
       {
-        idempotencyKey: cartId, //prevent duplicate sessions
+        idempotencyKey: `${cartId}-${Date.now()}`
       },
     );
 

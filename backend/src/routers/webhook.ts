@@ -38,6 +38,20 @@ router.post(
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as any;
 
+        const cartId = session.metadata.cartId;
+
+        const phone =
+          session.customer_details?.phone ||
+          session.customer_details?.phone_number ||
+          null;
+
+        const address = session.customer_details?.address;
+
+        const country = address?.country || null;
+        const city = address?.city || null;
+        const postal_code = address?.postal_code || null;
+        const line1 = address?.line1 || null;
+
         console.log("✅ Payment event:", session.id);
 
         // 🔒 verify payment
@@ -61,12 +75,13 @@ router.post(
         if (order.status !== "paid") {
           await supabase
             .from("orders")
-            .update({ status: "paid" })
-            .eq("id", order.id);
+            .update({ status: "paid", phone, country, city, postal_code, line1 })
+            .eq("id", order.id)
+            .neq("status", "paid");
 
           await supabase
             .from("carts")
-            .update({ items: [] })
+            .update({ items: [], status: "completed" })
             .eq("id", order.cart_id);
 
           console.log("Order marked as paid & cart cleared");
