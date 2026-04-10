@@ -8,6 +8,7 @@ import {
   // useState,
 } from "react";
 import type { CartItem, CartTotals, Product } from "../types/types";
+import { handleResponse } from "../helper/errorHelper";
 
 interface CartState {
   items: CartItem[];
@@ -92,37 +93,23 @@ interface CartContextValue extends CartState, CartTotals {
 const CartContext = createContext<CartContextValue | null>(null);
 
 //__________________________________Provider Component_____________________________________//
-// function getGuestId(): string {
-//   let guestId = localStorage.getItem("guestId");
 
-//   if (!guestId) {
-//     guestId = crypto.randomUUID();
-//     localStorage.setItem("guestId", guestId);
-//     console.log("🆕 New guestId created:", guestId);
-//   } else {
-//     console.log("♻️ Existing guestId:", guestId);
-//   }
-
-//   return guestId;
+// function getCartToken(): string | null {
+//   return localStorage.getItem("cartToken");
 // }
-function getCartToken(): string | null {
-  return localStorage.getItem("cartToken");
-}
 
-function setCartToken(token: string) {
-  localStorage.setItem("cartToken", token);
-}
+// function setCartToken(token: string) {
+//   localStorage.setItem("cartToken", token);
+// }
 
-function getAuthHeaders(): HeadersInit {
-  const token = getCartToken();
+// function getAuthHeaders(): HeadersInit {
+//   const token = getCartToken();
 
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { "x-cart-token": token } : {}),
-  };
-}
-
-
+//   return {
+//     "Content-Type": "application/json",
+//     ...(token ? { "x-cart-token": token } : {}),
+//   };
+// }
 
 interface CartProviderProps {
   children: React.ReactNode;
@@ -135,39 +122,18 @@ export function CartProvider({
   apiBase = "http://localhost:5173/api",
   // userId = null,
 }: CartProviderProps) {
-  // const [cartId, setCartId] = useState<string | null>(null);
-
-  // useEffect(() => {
-  //   const id = userId ?? getGuestId();
-  //   console.log("🚀 Cart initialized with ID:", id);
-  //   setCartId(id);
-  // }, [userId]);
   const [state, dispatch] = useReducer(cartReducer, initialState);
-
-  // const headers: HeadersInit | null = useMemo(() => {
-  //   // if (!cartId) return null;
-  //   const token = getCartToken();
-  //   return {
-  //     "Content-Type": "application/json",
-  //     ...(token ? { "x-cart-token": token } : {}),
-  //   };
-  // }, []);
-  // Headers only change when cartId changes.
 
   const fetchCart = useCallback(async (): Promise<void> => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       const res = await fetch(`${apiBase}`, {
-        headers: getAuthHeaders(),
+        method: "GET",
+        credentials: "include",
       });
-      if (!res.ok) {
-        throw new Error(`Failed to fetch cart (${res.status})`);
-      }
-      const data = await res.json();
-      // store token if backend sends it
-      if (data.token) {
-        setCartToken(data.token);
-      }
+
+      const data = await handleResponse(res);
+
       dispatch({ type: "SET_CART", payload: data.items ?? [] });
     } catch (err) {
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
@@ -183,23 +149,24 @@ export function CartProvider({
       try {
         const res = await fetch(`${apiBase}/checkout`, {
           method: "POST",
-          headers: getAuthHeaders(),
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ email }),
         });
-
-        if (!res.ok) {
-          throw new Error(`Checkout failed (${res.status})`);
-        }
-        const data: { url: string } = await res.json();
-
+        const data = await handleResponse(res);
         if (!data.url) {
           throw new Error("Missing Stripe URL");
         }
-
         // redirect to Stripe
         window.location.href = data.url;
       } catch (error) {
         console.error("Checkout error:", error);
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Checkout failed. Please try again.",
+        });
       }
     },
     [apiBase],
@@ -207,6 +174,9 @@ export function CartProvider({
 
   const addItem = useCallback(
     async (product: Product, quantity = 1): Promise<void> => {
+
+      if (state.loading) return;
+
       const optimistic: CartItem = {
         productId: product.id,
         name: product.name,
@@ -216,100 +186,88 @@ export function CartProvider({
       };
 
       dispatch({ type: "ADD_TO_CART", payload: optimistic });
-
+      dispatch({ type: "SET_LOADING", payload: true });
       try {
         const res = await fetch(`${apiBase}/items`, {
           method: "POST",
-
-          headers: getAuthHeaders(),
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ productId: product.id, quantity }),
         });
-        if (!res.ok) throw new Error(`Failed to add item (${res.status})`);
-        const data = (await res.json()) as {
-          items: CartItem[];
-          token?: string;
-        };
-        if (data.token) {
-          setCartToken(data.token);
-        }
-       dispatch({ type: "SET_CART", payload: data.items ?? [] });
-      } catch (err) {
-        dispatch({ type: "SET_ERROR", payload: (err as Error).message });
-        fetchCart();
-      }
-    },
-    [apiBase, fetchCart],
-  );
 
-  const removeItem = useCallback(
-    async (productId: string): Promise<void> => {
-      dispatch({ type: "REMOVE_ITEM", payload: productId });
-      try {
-        const res = await fetch(`${apiBase}/items/${productId}`, {
-          method: "DELETE",
-          headers: getAuthHeaders(),
-        });
-        if (!res.ok) throw new Error(`Failed to remove item (${res.status})`);
-        const data = (await res.json()) as {
-          items: CartItem[];
-          token?: string;
-        };
-        if (data.token) {
-          setCartToken(data.token);
-        }
+        const data = (await handleResponse(res));
+
         dispatch({ type: "SET_CART", payload: data.items ?? [] });
       } catch (err) {
         dispatch({ type: "SET_ERROR", payload: (err as Error).message });
         fetchCart();
       }
     },
-    [apiBase, fetchCart],
+    [apiBase, fetchCart, state.loading],
+  );
+
+  const removeItem = useCallback(
+    async (productId: string): Promise<void> => {
+      if (state.loading) return;
+
+      dispatch({ type: "REMOVE_ITEM", payload: productId });
+      try {
+        const res = await fetch(`${apiBase}/items/${productId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        const data = (await handleResponse(res));
+
+        dispatch({ type: "SET_CART", payload: data.items ?? [] });
+      } catch (err) {
+        dispatch({ type: "SET_ERROR", payload: (err as Error).message });
+        fetchCart();
+      }
+    },
+    [apiBase, fetchCart, state.loading],
   );
 
   const updateQuantity = useCallback(
     async (productId: string, quantity: number): Promise<void> => {
+      if (state.loading) return;
       if (quantity < 1) return removeItem(productId);
       dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
       try {
         const res = await fetch(`${apiBase}/items/${productId}`, {
           method: "PATCH",
-          headers: getAuthHeaders(),
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ quantity }),
         });
-        if (!res.ok) throw new Error(`Failed to update item (${res.status})`);
-        const data = (await res.json()) as {
-          items: CartItem[];
-          token?: string;
-        };
-        if (data.token) {
-          setCartToken(data.token);
-        }
+
+        const data = (await handleResponse(res));
         dispatch({ type: "SET_CART", payload: data.items ?? [] });
       } catch (err) {
         dispatch({ type: "SET_ERROR", payload: (err as Error).message });
         fetchCart();
       }
     },
-    [apiBase, removeItem, fetchCart],
+    [apiBase, removeItem, fetchCart, state.loading],
   );
 
   const clearCart = useCallback(async (): Promise<void> => {
+    if (state.loading) return;
     dispatch({ type: "CLEAR_CART" });
     try {
       const res = await fetch(`${apiBase}`, {
         method: "DELETE",
-        headers: getAuthHeaders(),
+        credentials: "include",
       });
-      const data = await res.json();
-
-    if (data.token) {
-      setCartToken(data.token); 
-    }
     } catch (err) {
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
       fetchCart();
     }
-  }, [apiBase, fetchCart]);
+  }, [apiBase, fetchCart, state.loading]);
 
   const totals: CartTotals = useMemo(
     () => ({
