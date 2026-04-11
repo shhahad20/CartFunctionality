@@ -21,21 +21,40 @@ router.post("/", async (req, res) => {
       // .update({ status: "locked" })
       .select("*")
       .eq("id", cartId)
-      .eq("owner_id", cartId)
+      // .eq("owner_id", cartId)
       .single();
 
     if (cartError || !cart) {
-      return res.status(500).json({ error: "Failed to fetch cart" });
+      // 🆕 create cart for guest
+      const { data: newCart, error: createError } = await supabase
+        .from("carts")
+        .insert({
+          id: cartId,
+          items: [],
+          status: "active",
+        })
+        .select()
+        .single();
+
+      if (createError || !newCart) {
+        return res.status(500).json({ error: "Failed to create cart" });
+      }
+
+      const cart = newCart;
     }
+
+    // if (cartError || !cart) {
+    //   return res.status(500).json({ error: "Failed to fetch cart" });
+    // }
     if (cart.status === "locked") {
       return res.status(400).json({ error: "Cart already used" });
     }
     if (!cart.items || cart.items.length === 0) {
       return res.status(400).json({ error: "Cart is empty" });
     }
-    if (cart.owner_id !== cartId) {
-      return res.status(403).json({ error: "Unauthorized cart access" });
-    }
+    // if (cart.owner_id !== cartId) {
+    //   return res.status(403).json({ error: "Unauthorized cart access" });
+    // }
 
     await supabase.from("carts").update({ status: "locked" }).eq("id", cartId);
 
@@ -98,7 +117,7 @@ router.post("/", async (req, res) => {
         cancel_url: "http://localhost:5173/cart",
       },
       {
-        idempotencyKey: `${cartId}-${Date.now()}`
+        idempotencyKey: `${cartId}-${Date.now()}`,
       },
     );
 
