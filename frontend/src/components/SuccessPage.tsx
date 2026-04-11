@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCart } from "../cart";
+import { BookmarkCheck } from 'lucide-react';
+
 
 type OrderItem = {
   productId: string;
@@ -79,11 +81,8 @@ export default function SuccessPage() {
         <div style={styles.header}>
           <div style={styles.logoArea}>
             <div style={styles.logoIcon}>
-              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                <rect x="4" y="8" width="6" height="20" rx="1" fill="#E8614A" />
-                <rect x="14" y="4" width="6" height="24" rx="1" fill="#E8614A" />
-                <rect x="24" y="12" width="6" height="16" rx="1" fill="#E8614A" />
-              </svg>
+
+                  <BookmarkCheck />
             </div>
             <span style={styles.logoText}>ORDER CONFIRMED</span>
           </div>
@@ -216,12 +215,13 @@ export default function SuccessPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    backgroundColor: "#f5f4f0",
+    // backgroundColor: "#f5f4f0",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "40px 16px",
-    fontFamily: "'Georgia', 'Times New Roman', serif",
+    
+    // fontFamily: "'Georgia', 'Times New Roman', serif",
   },
   invoice: {
     backgroundColor: "#ffffff",
@@ -244,13 +244,15 @@ const styles: Record<string, React.CSSProperties> = {
   logoIcon: {
     display: "flex",
     alignItems: "flex-end",
+    color: "#1a1a1a",
   },
   logoText: {
-    fontFamily: "'Arial Narrow', Arial, sans-serif",
+    // fontFamily: "'Arial Narrow', Arial, sans-serif",
     fontSize: "22px",
     fontWeight: "700",
-    letterSpacing: "0.08em",
+    // letterSpacing: "0.08em",
     color: "#1a1a1a",
+
   },
   headerMeta: {
     textAlign: "right",
@@ -259,9 +261,9 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     fontSize: "13px",
     color: "#888",
-    letterSpacing: "0.04em",
+    // letterSpacing: "0.04em",
     lineHeight: 1.6,
-    fontFamily: "Arial, sans-serif",
+    // fontFamily: "Arial, sans-serif",
   },
   divider: {
     height: "1px",
@@ -288,15 +290,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "10px",
     letterSpacing: "0.12em",
     color: "#aaa",
-    fontFamily: "Arial, sans-serif",
+    // fontFamily: "Arial, sans-serif",
     fontWeight: "600",
   },
   billingEmail: {
     margin: "0 0 8px",
     fontSize: "16px",
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: "Arial, sans-serif",
+    // fontFamily: "Arial, sans-serif",
   },
   addressBlock: {
     marginTop: "4px",
@@ -305,7 +307,7 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "1px 0",
     fontSize: "13px",
     color: "#555",
-    fontFamily: "Arial, sans-serif",
+    // fontFamily: "Arial, sans-serif",
     lineHeight: 1.5,
   },
   metaItem: {
@@ -316,11 +318,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "14px",
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: "Arial, sans-serif",
+    // fontFamily: "Arial, sans-serif",
   },
   statusBadge: {
-    color: "#E8614A",
-    letterSpacing: "0.06em",
+    color: "#e94560",
+    // letterSpacing: "0.06em",
   },
   tableHeader: {
     display: "flex",
@@ -331,7 +333,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "10px",
     letterSpacing: "0.12em",
     color: "#aaa",
-    fontFamily: "Arial, sans-serif",
+    // fontFamily: "Arial, sans-serif",
     fontWeight: "600",
     margin: 0,
   },
@@ -346,18 +348,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "15px",
     fontWeight: "700",
     color: "#1a1a1a",
-    fontFamily: "Arial, sans-serif",
   },
   itemValue: {
     fontSize: "15px",
     color: "#555",
-    fontFamily: "Arial, sans-serif",
   },
   itemSubtotal: {
     fontSize: "15px",
     fontWeight: "700",
-    color: "#E8614A",
-    fontFamily: "Arial, sans-serif",
+    color: "#1a1a1a",
   },
   footerBanner: {
     backgroundColor: "#f5f4f0",
@@ -378,7 +377,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "10px",
     letterSpacing: "0.12em",
     color: "#aaa",
-    fontFamily: "Arial, sans-serif",
     fontWeight: "600",
   },
   footerValue: {
@@ -386,15 +384,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "13px",
     fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: "Arial, sans-serif",
   },
   totalAmount: {
     margin: "4px 0 0",
-    fontSize: "28px",
-    fontWeight: "800",
-    color: "#E8614A",
-    fontFamily: "Arial Narrow, Arial, sans-serif",
-    letterSpacing: "-0.01em",
+    fontSize: "15px",
+    fontWeight: "700",
+    color: "#e94560",
   },
   thankYouRow: {
     padding: "20px 40px",
@@ -409,14 +404,13 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "8px",
   },
   heart: {
-    color: "#E8614A",
-    fontSize: "18px",
+    color: "#1a1a1a",
+    fontSize: "15px",
   },
   thankYouText: {
-    fontSize: "16px",
-    fontWeight: "700",
+    fontSize: "15px",
+    fontWeight: "600",
     color: "#1a1a1a",
-    fontFamily: "Arial, sans-serif",
   },
   contactRow: {
     display: "flex",
@@ -426,7 +420,6 @@ const styles: Record<string, React.CSSProperties> = {
   contactItem: {
     fontSize: "12px",
     color: "#888",
-    fontFamily: "Arial, sans-serif",
   },
   contactDivider: {
     color: "#ccc",
@@ -437,10 +430,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none",
     cursor: "pointer",
     fontSize: "12px",
-    color: "#E8614A",
-    fontFamily: "Arial, sans-serif",
+    color: "#333333",
     fontWeight: "600",
-    letterSpacing: "0.04em",
     padding: 0,
     textDecoration: "underline",
   },
@@ -461,10 +452,8 @@ const styles: Record<string, React.CSSProperties> = {
     animation: "pulse 1s infinite",
   },
   loadingText: {
-    fontFamily: "Arial, sans-serif",
     color: "#888",
     fontSize: "14px",
-    letterSpacing: "0.06em",
     margin: 0,
   },
 };
