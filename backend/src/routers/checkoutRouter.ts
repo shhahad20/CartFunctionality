@@ -105,7 +105,9 @@ router.post("/", async (req, res) => {
         phone_number_collection: {
           enabled: true,
         },
-
+        shipping_address_collection: {
+          allowed_countries: ["SA"], // 🔺🔺 Need to specify allowed countries for shipping address collection
+        },
         line_items,
 
         metadata: {

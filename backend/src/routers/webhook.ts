@@ -45,7 +45,10 @@ router.post(
           session.customer_details?.phone_number ||
           null;
 
-        const address = session.customer_details?.address;
+        const address =
+          session.customer_details?.address ||
+          session.shipping_details?.address ||
+          null;
 
         const country = address?.country || null;
         const city = address?.city || null;
@@ -75,7 +78,14 @@ router.post(
         if (order.status !== "paid") {
           await supabase
             .from("orders")
-            .update({ status: "paid", phone, country, city, postal_code, line1 })
+            .update({
+              status: "paid",
+              phone: phone,
+              country: address?.country || null,
+              city: address?.city || null,
+              address_line1: address?.line1 || null,
+              postal_code: address?.postal_code || null,
+            })
             .eq("id", order.id)
             .neq("status", "paid");
 
@@ -85,6 +95,7 @@ router.post(
             .eq("id", order.cart_id);
 
           console.log("Order marked as paid & cart cleared");
+          console.log("FULL SESSION:", JSON.stringify(session, null, 2));
         } else {
           console.log("Order already processed");
         }

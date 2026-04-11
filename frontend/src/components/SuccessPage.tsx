@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCart } from "../cart";
-import { BookmarkCheck } from 'lucide-react';
-
+import { BookmarkCheck } from "lucide-react";
 
 type OrderItem = {
   productId: string;
@@ -12,19 +11,18 @@ type OrderItem = {
 };
 
 type Order = {
-  orderId: string;
+  id: string;
   email: string;
   status: string;
   amount: number;
+  phone: string | null;
   items: OrderItem[];
-  address?: {
-    line1: string;
-    line2?: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
+  address_line1?: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
 };
 
 export default function SuccessPage() {
@@ -57,6 +55,8 @@ export default function SuccessPage() {
     year: "2-digit",
   });
 
+  console.log(order);
+
   if (loading) {
     return (
       <div style={styles.loadingWrapper}>
@@ -81,15 +81,21 @@ export default function SuccessPage() {
         <div style={styles.header}>
           <div style={styles.logoArea}>
             <div style={styles.logoIcon}>
-
-                  <BookmarkCheck />
+              <BookmarkCheck />
             </div>
             <span style={styles.logoText}>ORDER CONFIRMED</span>
           </div>
+
           <div style={styles.headerMeta}>
             <p style={styles.metaLine}>your order</p>
             <p style={styles.metaLine}>has been placed</p>
           </div>
+        </div>
+        <div style={styles.orderIdBanner}>
+          <p style={styles.orderIdLabel}>ORDER NO.</p>
+          <p style={styles.orderIdValue}>
+            #{order.id ?? sessionId?.slice(-8).toUpperCase()}
+          </p>
         </div>
 
         <div style={styles.divider} />
@@ -99,19 +105,19 @@ export default function SuccessPage() {
           <div style={styles.billingLeft}>
             <p style={styles.label}>BILLED TO</p>
             <p style={styles.billingEmail}>{order.email}</p>
-            {order.address && (
-              <div style={styles.addressBlock}>
-                <p style={styles.addressLine}>{order.address.line1}</p>
-                {order.address.line2 && (
-                  <p style={styles.addressLine}>{order.address.line2}</p>
-                )}
-                <p style={styles.addressLine}>
-                  {order.address.city}, {order.address.state}
-                </p>
-                <p style={styles.addressLine}>{order.address.postalCode}</p>
-                <p style={styles.addressLine}>{order.address.country}</p>
-              </div>
-            )}
+            <p style={styles.billingPhone}>{order.phone}</p>
+
+            <div style={styles.addressBlock}>
+              <p style={styles.addressLine}>{order.address_line1}</p>
+
+              <p style={styles.addressLine}>{order.address_line2}</p>
+
+              <p style={styles.addressLine}>
+                {order.city}, {order.state}
+              </p>
+              <p style={styles.addressLine}>{order.postal_code}</p>
+              <p style={styles.addressLine}>{order.country}</p>
+            </div>
           </div>
 
           <div style={styles.billingRight}>
@@ -119,12 +125,13 @@ export default function SuccessPage() {
               <p style={styles.label}>DATE ISSUED</p>
               <p style={styles.metaValue}>{today}</p>
             </div>
-            <div style={styles.metaItem}>
+            {/* <div style={styles.metaItem}>
               <p style={styles.label}>ORDER NO.</p>
               <p style={styles.metaValue}>
-                {order.orderId ?? sessionId?.slice(-8).toUpperCase()}
+                {order.id ?? sessionId?.slice(-8).toUpperCase()}
+              
               </p>
-            </div>
+            </div> */}
             <div style={styles.metaItem}>
               <p style={styles.label}>STATUS</p>
               <p style={{ ...styles.metaValue, ...styles.statusBadge }}>
@@ -139,9 +146,15 @@ export default function SuccessPage() {
         {/* Items Table */}
         <div style={styles.tableHeader}>
           <span style={{ ...styles.col, flex: 3 }}>DESCRIPTION</span>
-          <span style={{ ...styles.col, flex: 1, textAlign: "right" }}>QTY</span>
-          <span style={{ ...styles.col, flex: 1, textAlign: "right" }}>UNIT PRICE</span>
-          <span style={{ ...styles.col, flex: 1, textAlign: "right" }}>SUBTOTAL</span>
+          <span style={{ ...styles.col, flex: 1, textAlign: "right" }}>
+            QTY
+          </span>
+          <span style={{ ...styles.col, flex: 1, textAlign: "right" }}>
+            UNIT PRICE
+          </span>
+          <span style={{ ...styles.col, flex: 1, textAlign: "right" }}>
+            SUBTOTAL
+          </span>
         </div>
 
         <div style={styles.divider} />
@@ -155,7 +168,9 @@ export default function SuccessPage() {
             <span style={{ ...styles.itemValue, flex: 1, textAlign: "right" }}>
               ${item.price.toFixed(2)}
             </span>
-            <span style={{ ...styles.itemSubtotal, flex: 1, textAlign: "right" }}>
+            <span
+              style={{ ...styles.itemSubtotal, flex: 1, textAlign: "right" }}
+            >
               ${(item.price * item.quantity).toFixed(2)}
             </span>
           </div>
@@ -165,22 +180,19 @@ export default function SuccessPage() {
         <div style={styles.footerBanner}>
           <div style={styles.footerLeft}>
             <p style={styles.footerLabel}>SHIP TO</p>
-            {order.address ? (
-              <>
-                <p style={styles.footerValue}>{order.address.line1}</p>
-                <p style={styles.footerValue}>
-                  {order.address.city}, {order.address.postalCode}
-                </p>
-              </>
-            ) : (
-              <p style={styles.footerValue}>See confirmation email</p>
-            )}
+
+            <p style={styles.footerValue}>{order.address_line1}</p>
+            <p style={styles.footerValue}>
+              {order.city}, {order.postal_code}
+            </p>
+            <br />
+            <p style={styles.footerValue}>See confirmation email</p>
           </div>
 
           <div style={styles.footerMid}>
             <p style={styles.footerLabel}>ORDER ID</p>
             <p style={styles.footerValue}>
-              #{order.orderId ?? sessionId?.slice(-8).toUpperCase()}
+              #{order.id ?? sessionId?.slice(-8).toUpperCase()}
             </p>
           </div>
 
@@ -220,7 +232,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     padding: "40px 16px",
-    
+
     // fontFamily: "'Georgia', 'Times New Roman', serif",
   },
   invoice: {
@@ -234,7 +246,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    padding: "36px 40px 28px",
+    padding: "36px 40px 2px",
   },
   logoArea: {
     display: "flex",
@@ -252,7 +264,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: "700",
     // letterSpacing: "0.08em",
     color: "#1a1a1a",
-
   },
   headerMeta: {
     textAlign: "right",
@@ -275,6 +286,17 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     padding: "28px 40px",
     gap: "24px",
+  },
+  orderIdBanner: {
+    display: "flex",
+    padding: "0px 40px",
+    gap: "24px",
+    fontSize: "12px",
+    color: "#888",
+  },
+  orderIdLabel: {
+    fontSize: "12px",
+    fontWeight: "600",
   },
   billingLeft: {
     flex: 1,
@@ -299,6 +321,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: "600",
     color: "#1a1a1a",
     // fontFamily: "Arial, sans-serif",
+  },
+  billingPhone: {
+    margin: "0 0 8px",
+    fontSize: "14px",
+    color: "#1a1a1a",
   },
   addressBlock: {
     marginTop: "4px",
