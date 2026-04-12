@@ -13,7 +13,6 @@ export const protect = async (
   next: NextFunction,
 ) => {
   try {
-
     const token = req.cookies.token;
 
     if (!token) {
@@ -79,11 +78,18 @@ export const login = async (req: Request, res: Response) => {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     });
 
+    const cartId = req.cookies.cartId;
+
+    if (cartId) {
+      await supabase
+        .from("carts")
+        .update({ user_id: data.user.id })
+        .eq("id", cartId);
+    }
+
     res.json({
       message: "Logged in",
       user: data.user,
-      // session: data.session,
-      // access_token: data.session.access_token,
     });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
