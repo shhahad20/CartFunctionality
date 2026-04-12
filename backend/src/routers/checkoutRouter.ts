@@ -1,13 +1,15 @@
 import { Router } from "express";
 import { stripe } from "../config/stripe.js";
 import { supabase } from "../config/supabaseClient.js";
+import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
-    const { email } = req.body;
-    // const cartId = req.headers["x-cart-id"] as string;
+    const user = (req as any).user;
+    const email = user.email;
+    const userId = user.id;
     const cartId = (req as any).cartId;
 
     // Validate input
@@ -18,43 +20,22 @@ router.post("/", async (req, res) => {
     // Fetch cart from DB
     const { data: cart, error: cartError } = await supabase
       .from("carts")
-      // .update({ status: "locked" })
       .select("*")
       .eq("id", cartId)
-      // .eq("owner_id", cartId)
+      .eq("user_id", userId)
       .single();
 
     if (cartError || !cart) {
-      // 🆕 create cart for guest
-      const { data: newCart, error: createError } = await supabase
-        .from("carts")
-        .insert({
-          id: cartId,
-          items: [],
-          status: "active",
-        })
-        .select()
-        .single();
-
-      if (createError || !newCart) {
-        return res.status(500).json({ error: "Failed to create cart" });
-      }
-
-      const cart = newCart;
+      return res.status(404).json({ error: "Cart not found" });
     }
 
-    // if (cartError || !cart) {
-    //   return res.status(500).json({ error: "Failed to fetch cart" });
-    // }
     if (cart.status === "locked") {
       return res.status(400).json({ error: "Cart already used" });
     }
+
     if (!cart.items || cart.items.length === 0) {
       return res.status(400).json({ error: "Cart is empty" });
     }
-    // if (cart.owner_id !== cartId) {
-    //   return res.status(403).json({ error: "Unauthorized cart access" });
-    // }
 
     await supabase.from("carts").update({ status: "locked" }).eq("id", cartId);
 
@@ -77,7 +58,7 @@ router.post("/", async (req, res) => {
             product_data: {
               name: product.name,
             },
-            unit_amount: Math.round(product.price * 100), // 🔒 secure price
+            unit_amount: Math.round(product.price * 100), // secure price
           },
           quantity: item.quantity,
         };
@@ -99,7 +80,7 @@ router.post("/", async (req, res) => {
       {
         payment_method_types: ["card"],
         mode: "payment",
-        customer_email: email,
+        customer_email: user.email,
 
         billing_address_collection: "required",
         phone_number_collection: {
@@ -126,7 +107,8 @@ router.post("/", async (req, res) => {
     // Saving order BEFORE payment confirmation
     const { error: orderError } = await supabase.from("orders").insert({
       cart_id: cartId,
-      email,
+      user_id: userId,
+      email: user.email,
       items: cart.items,
       amount: total,
       status: "pending",
@@ -141,6 +123,7 @@ router.post("/", async (req, res) => {
     console.log("✅ Stripe session created:", session.id);
 
     res.json({ url: session.url });
+
   } catch (err) {
     console.error("❌ Checkout error:", err);
     res.status(500).json({ error: "Checkout failed" });

@@ -95,7 +95,6 @@ router.post(
             .eq("id", order.cart_id);
 
           console.log("Order marked as paid & cart cleared");
-          console.log("FULL SESSION:", JSON.stringify(session, null, 2));
         } else {
           console.log("Order already processed");
         }

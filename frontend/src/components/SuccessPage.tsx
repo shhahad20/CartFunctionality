@@ -55,7 +55,6 @@ export default function SuccessPage() {
     year: "2-digit",
   });
 
-  console.log(order);
 
   if (loading) {
     return (
