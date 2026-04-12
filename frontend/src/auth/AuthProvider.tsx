@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok) throw new Error(data.error);
 
       setUser(data.user);
+      restoreSession(); 
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);

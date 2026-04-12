@@ -2,7 +2,8 @@ import { supabase } from "../config/supabaseClient";
 import { Request, Response, NextFunction } from "express";
 
 export async function requireAuth(req:Request, res:Response, next:NextFunction) {
-  const token = req.headers.authorization?.replace("Bearer ", "");
+  // const token = req.headers.authorization?.replace("Bearer ", "");
+  const token = req.cookies.token;
 
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });

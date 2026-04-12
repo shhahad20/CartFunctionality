@@ -28,7 +28,6 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       } else {
         await register(email, password);
       }
-
       onClose();
     } catch (err) {
       alert(err instanceof Error ? err.message : "An error occurred");
