@@ -237,19 +237,25 @@ export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [shouldCheckoutAfterLogin, setShouldCheckoutAfterLogin] =
+    useState(false);
 
   useEffect(() => {
-    if (user && showAuth) {
+    if (user && shouldCheckoutAfterLogin) {
+      setShouldCheckoutAfterLogin(false);
       setShowAuth(false);
-      handleCheckout(); // 🔥 auto continue
+      onClose();
+
+      handleCheckout();
     }
-  }, [user]);
+  }, [user, shouldCheckoutAfterLogin]);
 
   if (!open) return null;
-  
+
   const handleCheckout = async () => {
-    // 🔐 not logged in → open auth modal
+    if (loading) return;
     if (!user) {
+      setShouldCheckoutAfterLogin(true); // remember intent
       setShowAuth(true);
       return;
     }
@@ -264,25 +270,6 @@ export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
       setLoading(false);
     }
   };
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (!email || !email.includes("@")) {
-  //     setError("Please enter a valid email");
-  //     return;
-  //   }
-
-  //   try {
-  //     setError(null);
-  //     setLoading(true);
-  //     await checkout(email);
-  //   } catch {
-  //     setError("Checkout failed. Try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   return (
     <>
