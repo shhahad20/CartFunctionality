@@ -24,48 +24,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const API = "http://localhost:4000/api/auth";
 
-  // const restoreSession = useCallback(async () => {
-  //   setLoading(true);
-  //   const token = localStorage.getItem("token");
-  //   const refreshToken = localStorage.getItem("refresh_token");
-
-  //   if (!token) {
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await fetch(`${API}/me`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     if (res.ok) {
-  //       const user = await res.json();
-  //       setUser(user);
-  //       return;
-  //     }
-
-  //     if (res.status === 401) {
-  //       const refreshRes = await fetch(`${API}/refresh`, {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ refresh_token: refreshToken }),
-  //       });
-
-  //       if (!refreshRes.ok) throw new Error("Session expired");
-
-  //       const refreshData = await refreshRes.json();
-  //       localStorage.setItem("token", refreshData.access_token);
-  //       localStorage.setItem("refresh_token", refreshData.refresh_token);
-  //       setUser(refreshData.user);
-  //     }
-  //   } catch {
-  //     localStorage.removeItem("token");
-  //     localStorage.removeItem("refresh_token");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, []);
 
   const restoreSession = useCallback(async () => {
     setLoading(true);
@@ -102,8 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // localStorage.setItem("token", data.access_token);
-      // localStorage.setItem("refresh_token", data.refresh_token);
       setUser(data.user);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
@@ -136,20 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // 🚪 logout
-  // const logout = () => {
-  //   fetch(`${API}/logout`, {
-  //     method: "POST",
-  //     credentials: "include",
-  //   }).catch(() => {
-  //     /* ignore logout network issues */
-  //   });
-
-  //   localStorage.removeItem("token");
-  //   localStorage.removeItem("refresh_token");
-  //   setUser(null);
-  //   setError(null);
-  // };
 
   const logout = async () => {
     await fetch(`${API}/logout`, {

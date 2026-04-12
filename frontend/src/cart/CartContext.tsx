@@ -88,7 +88,7 @@ interface CartContextValue extends CartState, CartTotals {
   removeItem: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
-  checkout: (email: string) => Promise<void>;
+  checkout: () => Promise<void>;
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -145,15 +145,11 @@ export function CartProvider({
   }, [fetchCart]);
 
   const checkout = useCallback(
-    async (email: string): Promise<void> => {
+    async (): Promise<void> => {
       try {
         const res = await fetch(`${apiBase}/checkout`, {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
         });
         const data = await handleResponse(res);
         if (!data.url) {
