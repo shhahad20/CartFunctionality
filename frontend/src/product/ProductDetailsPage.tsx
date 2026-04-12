@@ -9,6 +9,7 @@ export function ProductDetailsPage({ product }: { product: Product }) {
   //     : product.name.includes("Brand")
   //       ? "Graphic Design"
   //       : "Web Development";
+  const description = product.description;
   const tag = product.tag;
   const priceLabel = product.price === 0 ? "Pre-Order" : `${product.price} SAR`;
 
@@ -35,7 +36,7 @@ export function ProductDetailsPage({ product }: { product: Product }) {
 
           <h1 className="productDetailsTitle">{product.name}</h1>
           <p className="productDetailsDescription">
-            {product.description ?? "Detailed information will be available soon."}
+            {description ?? "Detailed information will be available soon."}
           </p>
 
           <div className="productDetailsActions">
