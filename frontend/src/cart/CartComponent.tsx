@@ -60,7 +60,7 @@ export const CartItemRow: FC<CartItemProps> = ({ item }) => {
       <div className="cart-item__info">
         <span className="cart-item__name">{item.name}</span>
         <span className="cart-item__price">
-          ${(item.price * item.quantity).toFixed(2)}
+          {(item.price * item.quantity).toFixed(2)} SAR
         </span>
       </div>
       <div className="cart-item__controls">
@@ -100,20 +100,20 @@ export const CartSummary: FC<CartSummaryProps> = ({ onCheckout }) => {
     <div className="cart-summary">
       <div className="cart-summary__row">
         <span>Subtotal ({itemCount} items)</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>{subtotal.toFixed(2)} SAR</span>
       </div>
       <div className="cart-summary__row">
         <span>Shipping</span>
-        <span>{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span>
+        <span>{shipping === 0 ? "FREE" : `${shipping.toFixed(2)} SAR`}</span>
       </div>
       {shipping > 0 && (
         <p className="cart-summary__hint">
-          Add ${(75 - subtotal).toFixed(2)} more for free shipping
+          Add {(75 - subtotal).toFixed(2)} SAR more for free shipping
         </p>
       )}
       <div className="cart-summary__row cart-summary__row--total">
         <span>Total</span>
-        <span>${total.toFixed(2)}</span>
+        <span>{total.toFixed(2)} SAR</span>
       </div>
       <button
         className="cart-summary__checkout"
@@ -294,7 +294,7 @@ export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
 
           {error && <p className="checkout-error">{error}</p>}
 
-          <button onClick={handleCheckout} disabled={loading}>
+          <button className="chcekout-btn" onClick={handleCheckout} disabled={loading}>
             {loading
               ? "Processing..."
               : user

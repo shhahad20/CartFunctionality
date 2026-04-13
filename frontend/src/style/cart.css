@@ -279,7 +279,16 @@
   border-radius: 6px;
   cursor: pointer;
 }
-
+.chcekout-btn{
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
 .checkout-close {
   position: absolute;
   top: 10px;
