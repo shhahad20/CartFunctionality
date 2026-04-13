@@ -1,9 +1,14 @@
-import { useEffect, useState, type FC, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FC,
+  type ReactNode,
+} from "react";
 import type { CartItem, Product } from "../types/types";
 import { useCart } from "./CartContext";
 import { useAuth } from "../auth/AuthProvider";
 import { AuthModal } from "../components/AuthModal";
-import { useNavigate } from "react-router-dom";
 
 interface CheckoutModalProps {
   open: boolean;
@@ -231,7 +236,7 @@ export const CartToggle: FC<CartToggleProps> = ({ onClick }) => {
 // ─── Cart Checkout Modal ───────────────────────
 export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
   const { checkout } = useCart();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -239,36 +244,39 @@ export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
   const [shouldCheckoutAfterLogin, setShouldCheckoutAfterLogin] =
     useState(false);
 
-  useEffect(() => {
-    if (user && shouldCheckoutAfterLogin) {
-      setShouldCheckoutAfterLogin(false);
-      setShowAuth(false);
-      onClose();
-
-      handleCheckout();
-    }
-  }, [user, shouldCheckoutAfterLogin]);
-
-  if (!open) return null;
-
-  const handleCheckout = async () => {
+  const handleCheckout = useCallback(async () => {
     if (loading) return;
-    if (!user) {
-      setShouldCheckoutAfterLogin(true); // remember intent
-      setShowAuth(true);
-      return;
-    }
 
     try {
       setError(null);
       setLoading(true);
+
+      // 🔥 REAL validation
+      const currentUser = await refresh();
+
+      if (!currentUser) {
+        setShouldCheckoutAfterLogin(true);
+        setShowAuth(true);
+        return;
+      }
+
       await checkout();
     } catch {
       setError("Checkout failed. Try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, checkout, refresh]);
+
+  useEffect(() => {
+    if (user && shouldCheckoutAfterLogin) {
+      setShouldCheckoutAfterLogin(false);
+      setShowAuth(false);
+      handleCheckout();
+    }
+  }, [user, shouldCheckoutAfterLogin, handleCheckout]);
+
+  if (!open) return null;
 
   return (
     <>

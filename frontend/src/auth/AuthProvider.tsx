@@ -20,7 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -55,13 +55,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
   // Restore / validate session (SOURCE OF TRUTH)
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<User | null> => {
     try {
       const res = await apiFetch(`${API}/me`);
       const data = await res.json();
-      setUser(data.user ?? data); // support both shapes
+
+      const currentUser = data.user ?? data;
+      setUser(currentUser);
+
+      return currentUser;
     } catch {
       setUser(null);
+      return null;
     }
   }, [apiFetch]);
 

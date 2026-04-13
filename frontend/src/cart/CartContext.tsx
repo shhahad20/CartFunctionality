@@ -93,24 +93,6 @@ interface CartContextValue extends CartState, CartTotals {
 const CartContext = createContext<CartContextValue | null>(null);
 
 //__________________________________Provider Component_____________________________________//
-
-// function getCartToken(): string | null {
-//   return localStorage.getItem("cartToken");
-// }
-
-// function setCartToken(token: string) {
-//   localStorage.setItem("cartToken", token);
-// }
-
-// function getAuthHeaders(): HeadersInit {
-//   const token = getCartToken();
-
-//   return {
-//     "Content-Type": "application/json",
-//     ...(token ? { "x-cart-token": token } : {}),
-//   };
-// }
-
 interface CartProviderProps {
   children: React.ReactNode;
   apiBase?: string;
