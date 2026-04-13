@@ -3,12 +3,6 @@ import type { Product } from "../types/types";
 import { AddToCartButton } from "../cart";
 
 export function ProductDetailsPage({ product }: { product: Product }) {
-  // const category =
-  //   product.name.includes("UI")
-  //     ? "UI Design"
-  //     : product.name.includes("Brand")
-  //       ? "Graphic Design"
-  //       : "Web Development";
   const description = product.description;
   const tag = product.tag;
   const priceLabel = product.price === 0 ? "Pre-Order" : `${product.price} SAR`;

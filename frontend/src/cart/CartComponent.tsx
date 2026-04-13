@@ -3,6 +3,7 @@ import type { CartItem, Product } from "../types/types";
 import { useCart } from "./CartContext";
 import { useAuth } from "../auth/AuthProvider";
 import { AuthModal } from "../components/AuthModal";
+import { useNavigate } from "react-router-dom";
 
 interface CheckoutModalProps {
   open: boolean;
@@ -231,8 +232,6 @@ export const CartToggle: FC<CartToggleProps> = ({ onClick }) => {
 export const CheckoutModal: FC<CheckoutModalProps> = ({ open, onClose }) => {
   const { checkout } = useCart();
   const { user } = useAuth();
-
-  // const [email, setEmail] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

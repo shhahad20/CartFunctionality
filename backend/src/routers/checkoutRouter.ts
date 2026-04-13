@@ -97,7 +97,7 @@ router.post("/", requireAuth, async (req, res) => {
         // 🔺NEED TO CHANGE URLS BEFORE DEPLOYMENT🔺
         success_url:
           "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: "http://localhost:5173/cart",
+        cancel_url: "http://localhost:5173",
       },
       {
         idempotencyKey: `${cartId}-${Date.now()}`,
