@@ -14,7 +14,7 @@ import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 import SuccessPage from "./components/SuccessPage.tsx";
 import { AuthModal } from "./components/AuthModal.tsx";
-import { LogOut, UserRound } from "lucide-react";
+import { Loader, LogOut, UserRound } from "lucide-react";
 
 function ProductCard({
   product,
@@ -120,15 +120,20 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const { user, logout, restoreSession } = useAuth();
+
+  const { user, logout, initialized } = useAuth();
+
   const handleCheckout = () => {
+    if (!user) {
+      setAuthOpen(true); // force login before checkout
+      return;
+    }
+
     setCheckoutOpen(true);
   };
 
-  useEffect(() => {
-    restoreSession();
-  }, [restoreSession]);
-
+  if (!initialized) return <Loader />;
+  
   return (
     <BrowserRouter>
       <CartProvider apiBase="http://localhost:4000/api/cart">
