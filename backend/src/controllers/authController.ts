@@ -118,7 +118,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:3000/reset-password", // frontend page
+      redirectTo: "http://localhost:5173/password?mode=forgot", // frontend page
     });
 
     if (error) {
@@ -151,6 +151,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+// we can skip change password for now. 
 export const changePassword = async (
   req: AuthRequest,
   res: Response,

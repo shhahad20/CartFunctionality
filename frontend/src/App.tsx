@@ -15,6 +15,7 @@ import { CheckoutModal } from "./cart/CartComponent.tsx";
 import SuccessPage from "./components/SuccessPage.tsx";
 import { AuthModal } from "./components/AuthModal.tsx";
 import { Loader, LogOut, UserRound } from "lucide-react";
+import PasswordPage from "./components/ResetPassword.tsx";
 
 function ProductCard({
   product,
@@ -133,7 +134,7 @@ function App() {
   };
 
   if (!initialized) return <Loader />;
-  
+
   return (
     <BrowserRouter>
       <CartProvider apiBase="http://localhost:4000/api/cart">
@@ -163,6 +164,7 @@ function App() {
             <Route path="/" element={<ProductsHome />} />
             <Route path="/product/:id" element={<ProductDetailsRoute />} />
             <Route path="/success" element={<SuccessPage />} />
+            <Route path="/password" element={<PasswordPage />} />
           </Routes>
 
           <CartDrawer

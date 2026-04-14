@@ -19,6 +19,11 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   if (!open) return null;
 
+  const handleForgotPassword = () => {
+    // Redirect to forgot password page
+    window.location.href = "/password?mode=forgot";
+  };
+
  const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -53,6 +58,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <span onClick={handleForgotPassword} style={{ cursor: "pointer", width: "fit-content" }}>
+          Forgot Password?
+        </span>
 
         <button onClick={handleSubmit} disabled={loading}>
           {loading ? "Loading..." : mode === "login" ? "Login" : "Register"}
@@ -60,7 +68,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
         <p>
           {mode === "login" ? "Don't have an account?" : "Already have an account?"}
-          <span onClick={() => setMode(mode === "login" ? "register" : "login")}>
+          <span onClick={() => setMode(mode === "login" ? "register" : "login")} style={{ cursor: "pointer", width: "fit-content" }}>
             {mode === "login" ? " Register" : " Login"}
           </span>
         </p>
