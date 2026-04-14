@@ -21,6 +21,10 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<User | null>;
+
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (password: string) => Promise<void>;
+  changePassword: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -29,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
   const API = "http://localhost:4000/api/auth";
@@ -45,8 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (res.status === 401) {
-        // session expired → force logout
         setUser(null);
+        setError("Session expired");
         throw new Error("Unauthorized");
       }
 
@@ -81,28 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     init();
   }, [refresh]);
-
-  // const restoreSession = useCallback(async () => {
-  //   setLoading(true);
-
-  //   try {
-  //     const res = await apiFetch(`${API}/me`, {
-  //       credentials: "include",
-  //     });
-
-  //     if (!res.ok) {
-  //       setUser(null);
-  //       return;
-  //     }
-
-  //     const user = await res.json();
-  //     setUser(user);
-  //   } catch {
-  //     setUser(null);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [apiFetch]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -146,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
-
+        setSuccess("Reset email sent");
         // auto-login
         // await login(email, password);
       } catch (err) {
@@ -170,6 +153,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [apiFetch]);
 
+  const forgotPassword = useCallback(
+    async (email: string) => {
+      setError(null);
+      setLoading(true);
+
+      try {
+        const res = await apiFetch(`${API}/forgot-password`, {
+          method: "POST",
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setSuccess("Reset email sent");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to send reset email";
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiFetch],
+  );
+
+  const resetPassword = useCallback(
+    async (password: string) => {
+      setError(null);
+      setLoading(true);
+
+      try {
+        const res = await apiFetch(`${API}/reset-password`, {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        // 🔥 IMPORTANT: refresh user after reset
+        await refresh();
+        setSuccess("Password reset successfully");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to reset password";
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiFetch, refresh],
+  );
+
+  const changePassword = useCallback(
+    async (password: string) => {
+      setError(null);
+      setLoading(true);
+
+      try {
+        const res = await apiFetch(`${API}/change-password`, {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to change password";
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiFetch],
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -180,8 +243,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       logout,
       refresh,
+      forgotPassword,
+      resetPassword,
+      changePassword,
     }),
-    [user, loading, initialized, error, login, register, logout, refresh],
+    [
+      user,
+      loading,
+      initialized,
+      error,
+      login,
+      register,
+      logout,
+      refresh,
+      forgotPassword,
+      resetPassword,
+      changePassword,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
