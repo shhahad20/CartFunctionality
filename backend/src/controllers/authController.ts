@@ -108,3 +108,73 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   // user comes from middleware
   res.json(req.user);
 };
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "http://localhost:3000/reset-password", // frontend page
+    });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({ message: "Password reset email sent" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+
+    const { data, error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({ message: "Password updated successfully", user: data.user });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: "New password is required" });
+    }
+
+    const { data, error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({
+      message: "Password changed successfully",
+      user: data.user,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
