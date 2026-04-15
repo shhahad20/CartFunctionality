@@ -5,7 +5,7 @@ import { getProductById } from "./productController.js";
 // ─── Storage interface ────────────────────────────────────────────
 export interface CartStore {
   get(cartId: string): Promise<Cart | null>;
-  save(cartId: string, cart: Cart): Promise<Cart>;
+  save(cartId: string, cart: Cart, userId?: string): Promise<Cart>;
   delete(cartId: string): Promise<void>;
 }
 
@@ -44,14 +44,14 @@ export class SupabaseCartStore implements CartStore {
     return cart;
   }
 
-  async save(cartId: string, cart: Cart): Promise<Cart> {
+  async save(cartId: string, cart: Cart, userId?: string): Promise<Cart> {
     cart.updatedAt = new Date();
 
     const { error } = await supabase.from("carts").upsert({
       id: cartId,
       items: cart.items,
       updated_at: cart.updatedAt,
-      user_id: cart.userId ?? null,
+      user_id: userId ?? null,
     });
 
     if (error) throw error;
@@ -97,10 +97,9 @@ export class CartService {
   ): Promise<Cart> {
     let cart = await this.store.get(cartId);
 
-    
     // CREATE ONLY HERE
     if (!cart) {
-      
+      console.log("Creating new cart: cartId =", cartId, "userId =", userId); // 🔺TO BE DELETED LATER🔺
       cart = {
         id: cartId,
         items: [],
@@ -125,7 +124,7 @@ export class CartService {
       });
     }
 
-    return this.store.save(cartId, cart);
+    return this.store.save(cartId, cart, userId);
   }
 
   async removeItem(cartId: string, productId: string): Promise<Cart> {

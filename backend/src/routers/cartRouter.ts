@@ -6,7 +6,7 @@ import type {
   CartResponse,
   ApiError,
 } from "../types.js";
-import { signCartToken, verifyCartToken } from "../helper/jwt.js";
+import { supabase } from "../config/supabaseClient.js";
 
 // ─── Typed request helpers ────────────────────────────────────────
 
@@ -34,12 +34,34 @@ function requireCart(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
+export async function optionalAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const token = req.cookies.token;
+
+  if (!token) return next(); // guest
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+
+  if (!error && user) {
+    (req as AuthRequest).userId = user.id;
+  }
+
+  next();
+}
+
 // ─── Router factory ───────────────────────────────────────────────
 
 export function createCartRouter(cartService: CartService): Router {
   const router = Router();
 
   router.use(requireCart);
+  router.use(optionalAuth);
 
   // GET /api/cart
   router.get("/", async (req: Request, res: Response): Promise<void> => {
@@ -62,7 +84,10 @@ export function createCartRouter(cartService: CartService): Router {
   router.post("/items", async (req: Request, res: Response): Promise<void> => {
     const { productId, quantity = 1 } = req.body as AddItemRequest;
     const cartId = (req as CartRequest).cartId;
-    const userId = (req as AuthRequest).userId;
+    const userId = (req as AuthRequest).userId ?? null;
+
+    console.log("Adding item to cart: cartId =", cartId, "userId =", userId); // 🔺TO BE DELETED LATER🔺
+    console.log("Request body:", req.body); // 🔺TO BE DELETED LATER🔺
 
     if (!productId) {
       res.status(400).json({ error: "productId is required" });

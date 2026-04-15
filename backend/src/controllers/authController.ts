@@ -89,6 +89,11 @@ export const login = async (req: Request, res: Response) => {
         guestCartId,
         data.user.id,
       );
+      res.cookie("cartId", finalCart.id, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      });
     } else {
       const { data: existingCart } = await supabase
         .from("carts")
