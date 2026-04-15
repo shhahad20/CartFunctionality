@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-
+import {AUTH_ENDPOINTS} from "../../api";
 interface User {
   id: string;
   email: string;
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [success, setSuccess] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  const API = "http://localhost:4000/api/auth";
+  // const API = "http://localhost:4000/api/auth";
 
   const apiFetch = useCallback(
     async (url: string, options: RequestInit = {}) => {
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Restore / validate session (SOURCE OF TRUTH)
   const refresh = useCallback(async (): Promise<User | null> => {
     try {
-      const res = await apiFetch(`${API}/me`);
+      const res = await apiFetch(`${AUTH_ENDPOINTS.ME}`);
       const data = await res.json();
 
       const currentUser = data.user ?? data;
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
 
       try {
-        const res = await apiFetch(`${API}/login`, {
+        const res = await apiFetch(`${AUTH_ENDPOINTS.LOGIN}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => {
       setError(null);
       try {
-        const res = await apiFetch(`${API}/register`, {
+        const res = await apiFetch(`${AUTH_ENDPOINTS.REGISTER}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await apiFetch(`${API}/logout`, { method: "POST" });
+      await apiFetch(`${AUTH_ENDPOINTS.LOGOUT}`, { method: "POST" });
     } catch {
       // ignore network errors
     } finally {
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
 
       try {
-        const res = await apiFetch(`${API}/forgot-password`, {
+        const res = await apiFetch(`${AUTH_ENDPOINTS.FORGOT_PASSWORD}`, {
           method: "POST",
           body: JSON.stringify({ email }),
         });
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
 
       try {
-        const res = await apiFetch(`${API}/reset-password`, {
+        const res = await apiFetch(`${AUTH_ENDPOINTS.RESET_PASSWORD}`, {
           method: "POST",
           body: JSON.stringify({ password }),
         });
@@ -214,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
 
       try {
-        const res = await apiFetch(`${API}/change-password`, {
+        const res = await apiFetch(`${AUTH_ENDPOINTS.CHANGE_PASSWORD}`, {
           method: "POST",
           body: JSON.stringify({ password }),
         });

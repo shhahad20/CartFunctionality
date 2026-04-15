@@ -29,9 +29,9 @@ export const AUTH_ENDPOINTS = {
 // ── Cart Endpoints ───────────────────────────────────────────────────────
 export const CART_ENDPOINTS = {
   GET_CART: `${API.FULL_URL}/cart`,
-  ADD_ITEM: `${API.FULL_URL}/items`,
-  UPDATE_ITEM: (productId: string) => `${API.FULL_URL}/items/${productId}`,
-  REMOVE_ITEM: (productId: string) => `${API.FULL_URL}/items/${productId}`,
+  ADD_ITEM: `${API.FULL_URL}/cart/items`,
+  UPDATE_ITEM: (productId: string) => `${API.FULL_URL}/cart/items/${productId}`,
+  REMOVE_ITEM: (productId: string) => `${API.FULL_URL}/cart/items/${productId}`,
   CHECKOUT: `${API.FULL_URL}/cart/checkout`,
   CLEAR_CART: `${API.FULL_URL}/cart`,
 };

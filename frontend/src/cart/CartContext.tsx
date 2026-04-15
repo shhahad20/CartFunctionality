@@ -175,7 +175,7 @@ export function CartProvider({
           },
           body: JSON.stringify({ productId: product.id, quantity }),
         });
-        console.log("Add item response:", res);
+
         const data = (await handleResponse(res));
 
         dispatch({ type: "SET_CART", payload: data.items ?? [] });
@@ -197,7 +197,7 @@ export function CartProvider({
           method: "DELETE",
           credentials: "include",
         });
-        console.log("Remove item response:", res);
+
         const data = (await handleResponse(res));
 
         dispatch({ type: "SET_CART", payload: data.items ?? [] });
