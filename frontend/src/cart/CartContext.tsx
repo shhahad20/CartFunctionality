@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { CartItem, CartTotals, Product } from "../types/types";
 import { handleResponse } from "../helper/errorHelper";
-
+import { ENDPOINTS } from "../../api";
 interface CartState {
   items: CartItem[];
   loading: boolean;
@@ -101,7 +101,8 @@ interface CartProviderProps {
 
 export function CartProvider({
   children,
-  apiBase = "http://localhost:5173/api",
+  // apiBase = "http://localhost:5173/api",
+  // apiBase = ENDPOINTS
   // userId = null,
 }: CartProviderProps) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
@@ -109,7 +110,7 @@ export function CartProvider({
   const fetchCart = useCallback(async (): Promise<void> => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await fetch(`${apiBase}`, {
+      const res = await fetch(`${ENDPOINTS.GET_CART}`, {
         method: "GET",
         credentials: "include",
       });
@@ -120,7 +121,7 @@ export function CartProvider({
     } catch (err) {
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
     }
-  }, [apiBase]);
+  }, [ENDPOINTS.GET_CART]);
 
   useEffect(() => {
     fetchCart();
@@ -129,7 +130,7 @@ export function CartProvider({
   const checkout = useCallback(
     async (): Promise<void> => {
       try {
-        const res = await fetch(`${apiBase}/checkout`, {
+        const res = await fetch(`${ENDPOINTS.CHECKOUT}`, {
           method: "POST",
           credentials: "include",
         });
@@ -147,7 +148,7 @@ export function CartProvider({
         });
       }
     },
-    [apiBase],
+    [ENDPOINTS.CHECKOUT],
   );
 
   const addItem = useCallback(
@@ -166,7 +167,7 @@ export function CartProvider({
       dispatch({ type: "ADD_TO_CART", payload: optimistic });
       dispatch({ type: "SET_LOADING", payload: true });
       try {
-        const res = await fetch(`${apiBase}/items`, {
+        const res = await fetch(`${ENDPOINTS.ADD_ITEM}`, {
           method: "POST",
           credentials: "include",
           headers: {
@@ -174,7 +175,7 @@ export function CartProvider({
           },
           body: JSON.stringify({ productId: product.id, quantity }),
         });
-
+        console.log("Add item response:", res);
         const data = (await handleResponse(res));
 
         dispatch({ type: "SET_CART", payload: data.items ?? [] });
@@ -183,7 +184,7 @@ export function CartProvider({
         fetchCart();
       }
     },
-    [apiBase, fetchCart, state.loading],
+    [ fetchCart, state.loading],
   );
 
   const removeItem = useCallback(
@@ -192,11 +193,11 @@ export function CartProvider({
 
       dispatch({ type: "REMOVE_ITEM", payload: productId });
       try {
-        const res = await fetch(`${apiBase}/items/${productId}`, {
+        const res = await fetch(`${ENDPOINTS.REMOVE_ITEM(productId)}`, {
           method: "DELETE",
           credentials: "include",
         });
-
+        console.log("Remove item response:", res);
         const data = (await handleResponse(res));
 
         dispatch({ type: "SET_CART", payload: data.items ?? [] });
@@ -205,7 +206,7 @@ export function CartProvider({
         fetchCart();
       }
     },
-    [apiBase, fetchCart, state.loading],
+    [ fetchCart, state.loading],
   );
 
   const updateQuantity = useCallback(
@@ -214,7 +215,7 @@ export function CartProvider({
       if (quantity < 1) return removeItem(productId);
       dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
       try {
-        const res = await fetch(`${apiBase}/items/${productId}`, {
+        const res = await fetch(`${ENDPOINTS.UPDATE_ITEM(productId)}`, {
           method: "PATCH",
           credentials: "include",
           headers: {
@@ -230,14 +231,14 @@ export function CartProvider({
         fetchCart();
       }
     },
-    [apiBase, removeItem, fetchCart, state.loading],
+    [ removeItem, fetchCart, state.loading],
   );
 
   const clearCart = useCallback(async (): Promise<void> => {
     if (state.loading) return;
     dispatch({ type: "CLEAR_CART" });
     try {
-      const res = await fetch(`${apiBase}`, {
+        await fetch(`${ENDPOINTS.CLEAR_CART}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -245,7 +246,7 @@ export function CartProvider({
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
       fetchCart();
     }
-  }, [apiBase, fetchCart, state.loading]);
+  }, [ fetchCart, state.loading]);
 
   const totals: CartTotals = useMemo(
     () => ({
