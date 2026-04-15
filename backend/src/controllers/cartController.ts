@@ -51,6 +51,7 @@ export class SupabaseCartStore implements CartStore {
       id: cartId,
       items: cart.items,
       updated_at: cart.updatedAt,
+      user_id: cart.userId ?? null,
     });
 
     if (error) throw error;
@@ -65,10 +66,25 @@ export class SupabaseCartStore implements CartStore {
   }
 }
 
+
 // ─── CartService ──────────────────────────────────────────────────
 
 export class CartService {
   constructor(private readonly store: CartStore) {}
+
+  private mergeItems(userItems: CartItem[], guestItems: CartItem[]) {
+  const map = new Map<string, CartItem>();
+
+  for (const item of [...userItems, ...guestItems]) {
+    if (map.has(item.productId)) {
+      map.get(item.productId)!.quantity += item.quantity;
+    } else {
+      map.set(item.productId, { ...item });
+    }
+  }
+
+  return Array.from(map.values());
+}
 
   async getCart(cartId: string): Promise<Cart | null> {
     return this.store.get(cartId);
@@ -77,15 +93,19 @@ export class CartService {
   async addItem(
     cartId: string,
     { productId, quantity = 1 }: AddItemRequest,
+    userId?: string,
   ): Promise<Cart> {
     let cart = await this.store.get(cartId);
 
+    
     // CREATE ONLY HERE
     if (!cart) {
+      
       cart = {
         id: cartId,
         items: [],
         updatedAt: new Date(),
+        userId: userId ?? null,
       };
     }
 
@@ -148,28 +168,67 @@ export class CartService {
     });
   }
 
-  async mergeGuestCart(userId: string, guestItems: CartItem[]): Promise<Cart> {
-    let cart = await this.store.get(userId);
+  async mergeGuestCartToUser(
+  guestCartId: string,
+  userId: string,
+): Promise<Cart> {
+  const guestCart = await this.store.get(guestCartId);
 
-    if (!cart) {
-      cart = {
-        id: userId,
-        items: [],
-        updatedAt: new Date(),
+  // 1. Get user cart (by user_id)
+  const { data: existingUserCart } = await supabase
+    .from("carts")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  // 2. If no guest cart → just return existing
+  if (!guestCart) {
+    if (existingUserCart) {
+      return {
+        id: existingUserCart.id,
+        items: existingUserCart.items ?? [],
+        updatedAt: new Date(existingUserCart.updated_at),
+        userId,
       };
     }
 
-    for (const guestItem of guestItems) {
-      const idx = cart.items.findIndex(
-        (i) => i.productId === guestItem.productId,
-      );
-      if (idx >= 0) {
-        cart.items[idx].quantity += guestItem.quantity;
-      } else {
-        cart.items.push(guestItem);
-      }
-    }
+    // no carts at all → create one
+    const newCart: Cart = {
+      id: crypto.randomUUID(),
+      items: [],
+      updatedAt: new Date(),
+      userId,
+    };
 
-    return this.store.save(userId, cart);
+    return this.store.save(newCart.id, newCart);
   }
+
+  // 3. If user has NO cart → assign guest cart
+  if (!existingUserCart) {
+    guestCart.userId = userId;
+    return this.store.save(guestCartId, guestCart);
+  }
+
+  // 4. Merge items
+  const mergedItems = this.mergeItems(
+    existingUserCart.items ?? [],
+    guestCart.items ?? [],
+  );
+
+  const updatedCart: Cart = {
+    id: existingUserCart.id,
+    items: mergedItems,
+    updatedAt: new Date(),
+    userId,
+  };
+
+  await this.store.save(existingUserCart.id, updatedCart);
+
+  // 5. Delete guest cart
+  await this.store.delete(guestCartId);
+
+  return updatedCart;
+}
+
+
 }

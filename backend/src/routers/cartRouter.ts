@@ -26,7 +26,7 @@ function requireCart(req: Request, res: Response, next: NextFunction): void {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 1 // 1 minute for testing, increase in production
+      maxAge: 1000 * 60 * 1, // 1 minute for testing, increase in production
     });
   }
 
@@ -62,6 +62,7 @@ export function createCartRouter(cartService: CartService): Router {
   router.post("/items", async (req: Request, res: Response): Promise<void> => {
     const { productId, quantity = 1 } = req.body as AddItemRequest;
     const cartId = (req as CartRequest).cartId;
+    const userId = (req as AuthRequest).userId;
 
     if (!productId) {
       res.status(400).json({ error: "productId is required" });
@@ -73,14 +74,17 @@ export function createCartRouter(cartService: CartService): Router {
     }
 
     try {
-      const cart = await cartService.addItem(cartId, {
-        productId,
-        quantity,
-      });
+      const cart = await cartService.addItem(
+        cartId,
+        {
+          productId,
+          quantity,
+        },
+        userId,
+      );
 
       // const token = signCartToken(cart.id);
       res.status(200).json({ items: cart.items });
-
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
@@ -106,7 +110,6 @@ export function createCartRouter(cartService: CartService): Router {
         );
         // const token = signCartToken(cart.id);
         res.json({ items: cart.items });
-
       } catch (err) {
         res.status(500).json({ error: (err as Error).message });
       }
@@ -136,7 +139,6 @@ export function createCartRouter(cartService: CartService): Router {
       await cartService.clearCart((req as CartRequest).cartId);
       // const token = signCartToken((req as CartRequest).cartId);
       res.json({ items: [] });
-      
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }

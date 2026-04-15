@@ -1,7 +1,9 @@
 import { supabase } from "../config/supabaseClient";
 import { NextFunction, Request, Response } from "express";
 import { User } from "@supabase/supabase-js";
+import { CartService, SupabaseCartStore } from "./cartController";
 
+const cartService = new CartService(new SupabaseCartStore());
 interface AuthRequest extends Request {
   user?: User | null;
 }
@@ -78,13 +80,46 @@ export const login = async (req: Request, res: Response) => {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     });
 
-    const cartId = req.cookies.cartId;
+    const guestCartId = req.cookies.cartId;
 
-    if (cartId) {
-      await supabase
+    let finalCart = null;
+
+    if (guestCartId) {
+      finalCart = await cartService.mergeGuestCartToUser(
+        guestCartId,
+        data.user.id,
+      );
+    } else {
+      const { data: existingCart } = await supabase
         .from("carts")
-        .update({ user_id: data.user.id })
-        .eq("id", cartId);
+        .select("*")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (existingCart) {
+        finalCart = existingCart;
+      } else {
+        // ✅ CREATE cart if none exists
+        const { data: newCart, error } = await supabase
+          .from("carts")
+          .insert({
+            user_id: data.user.id,
+            items: [],
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        finalCart = newCart;
+      }
+
+      // After merging, set cartId cookie to the user's cart ID (which is the same as user ID)
+      res.cookie("cartId", finalCart.id, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      });
     }
 
     res.json({
@@ -92,6 +127,7 @@ export const login = async (req: Request, res: Response) => {
       user: data.user,
     });
   } catch (err) {
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -151,11 +187,8 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-// we can skip change password for now. 
-export const changePassword = async (
-  req: AuthRequest,
-  res: Response,
-) => {
+// we can skip change password for now.
+export const changePassword = async (req: AuthRequest, res: Response) => {
   try {
     const { password } = req.body;
 
