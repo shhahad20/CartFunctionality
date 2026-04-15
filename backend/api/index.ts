@@ -12,6 +12,7 @@ import webhook from "../src/routers/webhook.js";
 import orderRouter from "../src/routers/orderRouter.js";
 import authRouter from "../src/routers/authRouter.js";
 import cookieParser from "cookie-parser";
+import "../src/helper/cleaner.js"; // start cleanup job
 
 dotenv.config();
 

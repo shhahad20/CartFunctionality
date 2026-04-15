@@ -26,7 +26,7 @@ function requireCart(req: Request, res: Response, next: NextFunction): void {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      maxAge: 1000 * 60 * 1 // 1 minute for testing, increase in production
     });
   }
 

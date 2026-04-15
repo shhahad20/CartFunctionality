@@ -22,7 +22,7 @@ export class SupabaseCartStore implements CartStore {
     if (error) throw error;
 
     if (!data) {
-      return null; // ✅ DO NOT CREATE
+      return null;
     }
 
     const cart: Cart = {
@@ -38,35 +38,11 @@ export class SupabaseCartStore implements CartStore {
         id: cartId,
         items: [],
         updatedAt: new Date(),
-      }; // ✅ DO NOT SAVE
+      };
     }
 
     return cart;
   }
-
-  //   let cart: Cart = {
-  //     id: data.id,
-  //     items: data.items,
-  //     updatedAt: new Date(data.updated_at),
-  //   };
-
-  //   const isExpired = Date.now() - cart.updatedAt.getTime() > CART_TTL;
-
-  //   if (isExpired) {
-  //     console.log("Cart expired:", cartId);
-
-  //     const newCart: Cart = {
-  //       id: cartId,
-  //       items: [],
-  //       updatedAt: new Date(),
-  //     };
-
-  //     await this.save(cartId, newCart);
-  //     return newCart;
-  //   }
-
-  //   return cart;
-  // }
 
   async save(cartId: string, cart: Cart): Promise<Cart> {
     cart.updatedAt = new Date();
@@ -104,7 +80,7 @@ export class CartService {
   ): Promise<Cart> {
     let cart = await this.store.get(cartId);
 
-    // ✅ CREATE ONLY HERE
+    // CREATE ONLY HERE
     if (!cart) {
       cart = {
         id: cartId,
@@ -197,5 +173,3 @@ export class CartService {
     return this.store.save(userId, cart);
   }
 }
-
-// ─── CartService ──────────────────────────────────────────────────
