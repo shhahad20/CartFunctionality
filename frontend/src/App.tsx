@@ -16,6 +16,7 @@ import SuccessPage from "./components/SuccessPage.tsx";
 import { AuthModal } from "./components/AuthModal.tsx";
 import { Loader, LogOut, UserRound } from "lucide-react";
 import PasswordPage from "./components/ResetPassword.tsx";
+import { CART_ENDPOINTS, PRODUCT_ENDPOINTS } from "../api/index.ts";  
 
 function ProductCard({
   product,
@@ -63,7 +64,7 @@ function ProductsHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/products")
+    fetch(`${PRODUCT_ENDPOINTS.GET_ALL}`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
@@ -104,7 +105,7 @@ function ProductDetailsRoute() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`http://localhost:4000/api/products/${id}`)
+    fetch(`${PRODUCT_ENDPOINTS.GET_BY_ID(id)}`)
       .then((res) => res.json())
       .then(setProduct)
       .catch((err) => console.error(err));
@@ -137,10 +138,10 @@ function App() {
 
   return (
     <BrowserRouter>
-      <CartProvider apiBase="http://localhost:4000/api/cart">
+      <CartProvider apiBase={CART_ENDPOINTS.GET_CART}>
         <div className="shopPage">
           <nav className="topNav">
-            <div className="brandMark">Digital Services</div>
+            <div className="brandMark" >Digital Services</div>
 
             <div className="navRight">
               {user ? (
