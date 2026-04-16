@@ -139,6 +139,7 @@ export function CartProvider({
           throw new Error("Missing Stripe URL");
         }
         // redirect to Stripe
+        console.log("response from checkout:", data);
         window.location.href = data.url;
       } catch (error) {
         console.error("Checkout error:", error);
