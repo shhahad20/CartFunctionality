@@ -124,6 +124,7 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
 
   const { user, logout, initialized } = useAuth();
+  // const navigate = useNavigate();
 
   const handleCheckout = () => {
     if (!user) {
@@ -141,7 +142,17 @@ function App() {
       <CartProvider apiBase={CART_ENDPOINTS.GET_CART}>
         <div className="shopPage">
           <nav className="topNav">
-            <div className="brandMark" >Digital Services</div>
+            <div
+              className="brandMark"
+              // role="button"
+              // tabIndex={0}
+              // onClick={() => navigate("/")}
+              // onKeyDown={(e) => {
+              //   if (e.key === "Enter" || e.key === " ") navigate("/");
+              // }}
+            >
+             <a href="/">Digital Services</a>
+            </div>
 
             <div className="navRight">
               {user ? (
