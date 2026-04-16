@@ -73,6 +73,10 @@ router.post(
           console.error("Order not found");
           return res.status(404).send("Order not found");
         }
+        if (order.status === "paid") {
+          console.log("Already processed, skipping");
+          return res.status(200).json({ received: true });
+        }
 
         // 🔒 idempotency protection
         if (order.status !== "paid") {
