@@ -314,7 +314,7 @@ function drawTableRows(
       .font(FONT.regular)
       .fontSize(10)
       .fillColor(COLORS.textPrimary)
-      .text(`SAR ${item.price.toFixed(2)}`, COL.unit.x, textY, {
+      .text(`SAR ${item.price}`, COL.unit.x, textY, {
         width: COL.unit.width - 8,
         align: "right",
         lineBreak: false,
@@ -325,7 +325,7 @@ function drawTableRows(
       .font(FONT.bold)
       .fontSize(10)
       .fillColor(COLORS.textPrimary)
-      .text(`SAR ${lineTotal.toFixed(2)}`, COL.subtotal.x, textY, {
+      .text(`SAR ${lineTotal}`, COL.subtotal.x, textY, {
         width: COL.subtotal.width - 8,
         align: "right",
         lineBreak: false,
@@ -375,7 +375,7 @@ function drawTotals(
         .font(FONT.bold)
         .fontSize(13)
         .fillColor(COLORS.brandAccent)
-        .text(`SAR ${amount.toFixed(2)}`, valueX, curY + 2, {
+        .text(`SAR ${amount}`, valueX, curY + 2, {
           width: valueW,
           align: "right",
           lineBreak: false,
@@ -391,7 +391,7 @@ function drawTotals(
         .font(FONT.regular)
         .fontSize(10)
         .fillColor(COLORS.textPrimary)
-        .text(`SAR ${amount.toFixed(2)}`, valueX, curY, {
+        .text(`SAR ${amount}`, valueX, curY, {
           width: valueW,
           align: "right",
           lineBreak: false,

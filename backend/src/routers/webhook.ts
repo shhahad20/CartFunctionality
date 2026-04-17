@@ -122,7 +122,7 @@ router.post(
             html: `
               <h1>Thank you for your order</h1>
               <p>Order ID: ${order.id}</p>
-              <p>Total: SAR ${order.total}</p>
+              <p>Total: SAR ${order.amount}</p>
               <h3>Items:</h3>
               <ul>
                ${order.items.map((i: any) => `<li>${i.name} x${i.quantity}</li>`).join("")}
@@ -137,10 +137,16 @@ router.post(
             ],
           });
 
-          await supabase
+          console.log("cartId from session metadata:", order.cartId);
+          const { error: cartError } = await supabase
             .from("carts")
-            .update({ items: [], status: "completed" })
+            .update({ items: [], status: "active" })
             .eq("id", order.cart_id);
+
+          if (cartError) {
+            console.error("Failed to clear cart:", cartError);
+            // Don't return 500 here — payment is confirmed, log and alert instead
+          }
 
           console.log("Order marked as paid & cart cleared");
         } else {
