@@ -157,11 +157,11 @@ function App() {
             <div className="navRight">
               {user ? (
                 <>
-                  <span>{user.email}</span>
+                  <span className="email-nav">{user.email}</span>
                   <button className="navBtn" onClick={logout}>
                     <LogOut />
                   </button>
-                </>
+                </> 
               ) : (
                 <button className="navBtn" onClick={() => setAuthOpen(true)}>
                   <UserRound />

@@ -9,7 +9,7 @@
   --radius: 28px;
 }
 
-a{
+a {
   color: inherit;
   text-decoration: none;
 }
@@ -35,7 +35,6 @@ a{
   font-size: 18px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  
 }
 
 .navRight {
@@ -43,7 +42,7 @@ a{
   align-items: center;
   gap: 10px;
 }
-.navBtn{
+.navBtn {
   background: none;
   border: none;
   width: 32px;
@@ -108,8 +107,8 @@ a{
   justify-content: space-between;
   gap: 5px;
 }
-.product-cat{
-  display:flex;
+.product-cat {
+  display: flex;
   align-items: left;
   gap: 5px;
 }
@@ -217,6 +216,11 @@ a{
   .topNav {
     flex-direction: row;
     align-items: center;
+  }
+  .navRight {
+    .email-nav {
+      display: none;
+    }
   }
 
   .productsGrid {
