@@ -3,12 +3,24 @@ import { stripe } from "../config/stripe.js";
 import { supabase } from "../config/supabaseClient.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { mergeOrAssignCart } from "../controllers/cartController.js";
-import { v4 as uuidv4 } from 'uuid';
-
+import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 const key = uuidv4();
 
+/* CHECKOUT FLOW/OPERATIONS :
+
+1. Validate cart ownership & merge → Must happen before anything else.
+2. Lock the cart → Prevents double-submission while user is on Stripe page.
+3. Re-fetch product prices from DB → Never trust client prices.
+4. Insert order row as "pending" → Must exist before Stripe session so webhook never misses it.
+5. Create Stripe session → Core purpose of the route.
+6. Patch stripe_session_id onto the order → Links the order to the session for the webhook to find.
+7. Return session.url → Send user to Stripe.
+
+# Checkout should never: send emails, generate PDFs,
+mark anything paid, or clear carts. Payment hasn't been confirmed yet.
+*/
 router.post("/", requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
@@ -65,10 +77,7 @@ router.post("/", requireAuth, async (req, res) => {
     }
 
     // ── Lock the cart optimistically ─────────────────────────────────────────
-    await supabase
-      .from("carts")
-      .update({ status: "locked" })
-      .eq("id", cartId);
+    await supabase.from("carts").update({ status: "locked" }).eq("id", cartId);
 
     // ── Re-fetch products from DB (never trust client-side prices) ───────────
     const line_items = await Promise.all(
@@ -91,19 +100,34 @@ router.post("/", requireAuth, async (req, res) => {
           },
           quantity: item.quantity,
         };
-      })
+      }),
     );
 
     // ── Validate total ────────────────────────────────────────────────────────
     const total = line_items.reduce(
       (sum, item) => sum + item.price_data.unit_amount * item.quantity,
-      0
+      0,
     );
 
     if (total <= 0) {
       return res.status(400).json({ error: "Invalid cart total" });
     }
 
+    // ── Persist pending order ─────────────────────────────────────────────────
+    const { error: orderError } = await supabase.from("orders").insert({
+      cart_id: cartId,
+      user_id: userId,
+      email,
+      items: cart.items,
+      amount: total,
+      status: "pending",
+      // stripe_session_id: session.id,
+    });
+
+    if (orderError) {
+      console.error("❌ Order insert failed:", orderError);
+      return res.status(500).json({ error: "Failed to create order" });
+    }
     // ── Create Stripe session ─────────────────────────────────────────────────
     const session = await stripe.checkout.sessions.create(
       {
@@ -124,23 +148,19 @@ router.post("/", requireAuth, async (req, res) => {
       },
       {
         idempotencyKey: `${cartId}-${userId}-${key}`,
-      }
+      },
     );
 
-    // ── Persist pending order ─────────────────────────────────────────────────
-    const { error: orderError } = await supabase.from("orders").insert({
-      cart_id: cartId,
-      user_id: userId,
-      email,
-      items: cart.items,
-      amount: total,
-      status: "pending",
-      stripe_session_id: session.id,
-    });
+    // ── Patch the session ID onto the order ──────────────────────────────────────
+    const { error: patchError } = await supabase
+      .from("orders")
+      .update({ stripe_session_id: session.id })
+      .eq("cart_id", cartId)
+      .eq("user_id", userId)
+      .eq("status", "pending");
 
-    if (orderError) {
-      console.error("❌ Order insert failed:", orderError);
-      return res.status(500).json({ error: "Failed to create order" });
+    if (patchError) {
+      console.error("⚠️ Could not patch stripe_session_id:", patchError);
     }
 
     console.log("✅ Stripe session created:", session.id);

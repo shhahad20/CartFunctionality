@@ -6,7 +6,20 @@ import { generateInvoicePDF } from "../helper/invoice.js";
 import { emailSender } from "../helper/emailSender.js";
 
 const router = Router();
+/*
+WEBHOOK FLOW/OPERATIONS:
+1. Verify signature → Security — reject anything unsigned.
+2. Check payment_status === "paid" → Guard against non-payment events.
+3. Lookup order by stripe_session_id → Find the pending order.
+4. Idempotency check (status !== "paid") → Stripe can send the same event multiple times.
+5. Update order to "paid" + save address/phone → Confirmed fulfillment data.
+6. Generate PDF invoice → Only makes sense after confirmed payment.
+7. Send confirmation email with PDF → Only after confirmed payment.
+8. Clear/complete the cart → Cart lifecycle ends when payment is confirmed.
 
+# Webhook should never: create the order row, validate cart ownership,
+or do anything that requires the user's session — it runs server-to-server with no user context.
+*/
 // ⚠️ Stripe needs raw body
 router.post(
   "/",
@@ -95,7 +108,14 @@ router.post(
             .eq("id", order.id)
             .neq("status", "paid");
 
-          const pdfBuffer = await generateInvoicePDF(order);
+          // Re-fetch so the PDF has the full updated record
+          const { data: updatedOrder } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("id", order.id)
+            .single();
+
+          const pdfBuffer = await generateInvoicePDF(updatedOrder);
           await emailSender({
             email: order.email,
             subject: "Your Order Confirmation",
