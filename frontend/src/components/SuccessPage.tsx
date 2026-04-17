@@ -165,12 +165,12 @@ export default function SuccessPage() {
               {item.quantity}
             </span>
             <span style={{ ...styles.itemValue, flex: 1, textAlign: "right" }}>
-              ${item.price.toFixed(2)}
+              SAR {item.price.toFixed(2)}
             </span>
             <span
               style={{ ...styles.itemSubtotal, flex: 1, textAlign: "right" }}
             >
-              ${(item.price * item.quantity).toFixed(2)}
+              SAR {(item.price * item.quantity).toFixed(2)}
             </span>
           </div>
         ))}
@@ -197,7 +197,7 @@ export default function SuccessPage() {
 
           <div style={styles.footerRight}>
             <p style={styles.footerLabel}>TOTAL PAID</p>
-            <p style={styles.totalAmount}>${(order.amount / 100).toFixed(2)}</p>
+            <p style={styles.totalAmount}> SAR {(order.amount / 100).toFixed(2)}</p>
           </div>
         </div>
 

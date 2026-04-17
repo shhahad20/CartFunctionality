@@ -17,14 +17,14 @@ export const generateInvoicePDF = (order: any): Promise<Buffer> => {
 
     doc.fontSize(12).text(`Order ID: ${order.id}`);
     doc.text(`Customer: ${order.email}`);
-    doc.text(`Total: $${order.total}`);
+    doc.text(`Total: SAR ${order.total}`);
     doc.text(`Date: ${new Date().toLocaleDateString()}`);
 
     doc.moveDown();
     doc.text("Items:");
 
     order.items.forEach((item: any) => {
-      doc.text(`- ${item.name} x${item.quantity} ($${item.price})`);
+      doc.text(`- ${item.name} x${item.quantity} (SAR ${item.price})`);
     });
 
     doc.end();

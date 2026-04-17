@@ -102,7 +102,7 @@ router.post(
             html: `
               <h1>Thank you for your order</h1>
               <p>Order ID: ${order.id}</p>
-              <p>Total: $${order.total}</p>
+              <p>Total: SAR ${order.total}</p>
               <h3>Items:</h3>
               <ul>
                ${order.items.map((i: any) => `<li>${i.name} x${i.quantity}</li>`).join("")}
