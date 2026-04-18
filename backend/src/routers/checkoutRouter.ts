@@ -6,7 +6,7 @@ import { mergeOrAssignCart } from "../controllers/cartController.js";
 import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
-const key = uuidv4();
+
 
 /* CHECKOUT FLOW/OPERATIONS :
 
@@ -23,6 +23,7 @@ mark anything paid, or clear carts. Payment hasn't been confirmed yet.
 */
 router.post("/", requireAuth, async (req, res) => {
   try {
+    const key = uuidv4();
     const user = (req as any).user;
     const email = user.email;
     const userId = user.id;
