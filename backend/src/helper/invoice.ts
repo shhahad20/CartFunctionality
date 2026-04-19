@@ -11,7 +11,6 @@
 //       resolve(pdfData);
 //     });
 
-    
 //     doc.fontSize(20).text("Invoice", { align: "center" });
 //     doc.moveDown();
 
@@ -44,51 +43,53 @@ interface OrderItem {
 interface Order {
   id: string;
   email: string;
-  total: number;
+  amount: number;
   items: OrderItem[];
   createdAt?: Date;
-  billingAddress?: {
-    name?: string;
-    line1?: string;
-    city?: string;
-    country?: string;
-  };
+  phone?: string;
+  address_line1?: string;
+  city?: string;
+  country?: string;
+  postal_code?: string;
 }
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 
 const COLORS = {
-  brand:        "#1e1e1e", // deep navy — header background
-  brandAccent:  "rgba(255, 255, 255, 0.04)", // electric blue — accent line & highlights
-  surface:      "#f5f5f5", // near-white page background
-  tableHeader:  "#1e1e1e", // dark slate for table header row
-  rowAlt:       "rgba(255, 255, 255, 0.68)", // very light blue-grey alternate row
-  border:       "#f5f5f5", // subtle border
-  textPrimary:  "#1e1e1e", // near-black body text
-  textMuted:    "rgba(255, 255, 255, 0.68)", // secondary text
-  textOnDark:   "#FFFFFF", // white text on dark backgrounds
-  green:        "#16A34A", // paid badge
-  totalBg:      "#1e1e1e", // total row background
+  brand: "#1e1e1e", // deep navy — header background
+  brandAccent: "rgba(255, 255, 255, 0.04)", // electric blue — accent line & highlights
+  surface: "#f5f5f5", // near-white page background
+  tableHeader: "#1e1e1e", // dark slate for table header row
+  rowAlt: "rgba(255, 255, 255, 0.68)", // very light blue-grey alternate row
+  border: "#f5f5f5", // subtle border
+  textPrimary: "#1e1e1e", // near-black body text
+  textMuted: "rgba(255, 255, 255, 0.68)", // secondary text
+  textOnDark: "#FFFFFF", // white text on dark backgrounds
+  green: "#16A34A", // paid badge
+  totalBg: "#1e1e1e", // total row background
 };
 
 const FONT = {
   regular: "Helvetica",
-  bold:    "Helvetica-Bold",
+  bold: "Helvetica-Bold",
   oblique: "Helvetica-Oblique",
 };
 
 // Page geometry
-const PAGE_WIDTH  = 595.28; // A4 points
+const PAGE_WIDTH = 595.28; // A4 points
 const PAGE_HEIGHT = 841.89;
-const MARGIN      = 48;
+const MARGIN = 48;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
 // ─── Helper: draw a filled rectangle ─────────────────────────────────────────
 
 function fillRect(
   doc: PDFKit.PDFDocument,
-  x: number, y: number, w: number, h: number,
-  color: string
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
 ) {
   doc.save().rect(x, y, w, h).fill(color).restore();
 }
@@ -99,9 +100,10 @@ function hRule(
   doc: PDFKit.PDFDocument,
   y: number,
   color = COLORS.border,
-  thickness = 0.5
+  thickness = 0.5,
 ) {
-  doc.save()
+  doc
+    .save()
     .moveTo(MARGIN, y)
     .lineTo(PAGE_WIDTH - MARGIN, y)
     .lineWidth(thickness)
@@ -132,7 +134,11 @@ function drawHeader(doc: PDFKit.PDFDocument, order: Order): number {
     .font(FONT.bold)
     .fontSize(28)
     .fillColor(COLORS.brandAccent)
-    .text("INVOICE", 0, 22, { align: "right", width: PAGE_WIDTH - MARGIN, lineBreak: false });
+    .text("INVOICE", 0, 22, {
+      align: "right",
+      width: PAGE_WIDTH - MARGIN,
+      lineBreak: false,
+    });
 
   // Tagline under company name
   doc
@@ -143,20 +149,34 @@ function drawHeader(doc: PDFKit.PDFDocument, order: Order): number {
 
   // Invoice number + date (bottom of header)
   const invoiceDate = order.createdAt
-    ? order.createdAt.toLocaleDateString("en-SA", { year: "numeric", month: "long", day: "numeric" })
-    : new Date().toLocaleDateString("en-SA", { year: "numeric", month: "long", day: "numeric" });
+    ? order.createdAt.toLocaleDateString("en-SA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : new Date().toLocaleDateString("en-SA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 
   doc
     .font(FONT.regular)
     .fontSize(9)
     .fillColor("#CBD5E1")
-    .text(`Invoice #${order.id.toUpperCase()}`, MARGIN, 78, { lineBreak: false });
+    .text(`Invoice #${order.id.toUpperCase()}`, MARGIN, 78, {
+      lineBreak: false,
+    });
 
   doc
     .font(FONT.regular)
     .fontSize(9)
     .fillColor("#CBD5E1")
-    .text(`Date: ${invoiceDate}`, 0, 78, { align: "right", width: PAGE_WIDTH - MARGIN, lineBreak: false });
+    .text(`Date: ${invoiceDate}`, 0, 78, {
+      align: "right",
+      width: PAGE_WIDTH - MARGIN,
+      lineBreak: false,
+    });
 
   return HEADER_HEIGHT;
 }
@@ -177,25 +197,32 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
     .font(FONT.bold)
     .fontSize(12)
     .fillColor(COLORS.textPrimary)
-    .text(order.billingAddress?.name ?? order.email, MARGIN, startY + 14);
+    .text(order.email, MARGIN, startY + 14);
 
-  if (order.billingAddress?.line1) {
+  if (order.address_line1) {
     doc
       .font(FONT.regular)
       .fontSize(10)
       .fillColor(COLORS.textMuted)
-      .text(order.billingAddress.line1, MARGIN, startY + 30);
+      .text(order.address_line1, MARGIN, startY + 30);
+  }
+  if (order.postal_code) {
+    doc
+      .font(FONT.regular)
+      .fontSize(10)
+      .fillColor(COLORS.textMuted)
+      .text(order.postal_code, MARGIN, startY + 30);
   }
 
-  if (order.billingAddress?.city || order.billingAddress?.country) {
+  if (order.city || order.country) {
     doc
       .font(FONT.regular)
       .fontSize(10)
       .fillColor(COLORS.textMuted)
       .text(
-        [order.billingAddress?.city, order.billingAddress?.country].filter(Boolean).join(", "),
+        [order.city, order.country].filter(Boolean).join(", "),
         MARGIN,
-        startY + 44
+        startY + 44,
       );
   }
 
@@ -203,7 +230,7 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
     .font(FONT.regular)
     .fontSize(10)
     .fillColor(COLORS.textMuted)
-    .text(order.email, MARGIN, startY + (order.billingAddress?.line1 ? 58 : 30));
+    .text(order.email, MARGIN, startY + (order.address_line1 ? 58 : 30));
 
   // Right: Payment status badge
   const badgeX = PAGE_WIDTH - MARGIN - 70;
@@ -213,7 +240,11 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
     .font(FONT.bold)
     .fontSize(9)
     .fillColor(COLORS.green)
-    .text("✓  PAID", badgeX, badgeY + 6, { width: 70, align: "center", lineBreak: false });
+    .text("✓  PAID", badgeX, badgeY + 6, {
+      width: 70,
+      align: "center",
+      lineBreak: false,
+    });
 
   // Right: Invoice details
   const detailsX = PAGE_WIDTH - MARGIN - 180;
@@ -222,8 +253,16 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
 
   labels.forEach((label, i) => {
     const rowY = startY + 32 + i * 18;
-    doc.font(FONT.bold).fontSize(9).fillColor(COLORS.textMuted).text(label, detailsX, rowY, { width: 90, lineBreak: false });
-    doc.font(FONT.regular).fontSize(9).fillColor(COLORS.textPrimary).text(values[i], detailsX + 95, rowY, { lineBreak: false });
+    doc
+      .font(FONT.bold)
+      .fontSize(9)
+      .fillColor(COLORS.textMuted)
+      .text(label, detailsX, rowY, { width: 90, lineBreak: false });
+    doc
+      .font(FONT.regular)
+      .fontSize(9)
+      .fillColor(COLORS.textPrimary)
+      .text(values[i], detailsX + 95, rowY, { lineBreak: false });
   });
 
   hRule(doc, startY + 100, COLORS.border);
@@ -234,10 +273,10 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
 // ─── Section: Line-items table ────────────────────────────────────────────────
 
 const COL = {
-  item:     { x: MARGIN,       width: 220 },
-  qty:      { x: MARGIN + 230, width: 60  },
-  unit:     { x: MARGIN + 300, width: 100 },
-  subtotal: { x: MARGIN + 410, width: 90  },
+  item: { x: MARGIN, width: 220 },
+  qty: { x: MARGIN + 230, width: 60 },
+  unit: { x: MARGIN + 300, width: 100 },
+  subtotal: { x: MARGIN + 410, width: 90 },
 };
 
 function drawTableHeader(doc: PDFKit.PDFDocument, y: number) {
@@ -245,10 +284,10 @@ function drawTableHeader(doc: PDFKit.PDFDocument, y: number) {
 
   const textY = y + 8;
   const headers: [keyof typeof COL, string, "left" | "right"][] = [
-    ["item",     "ITEM DESCRIPTION", "left"],
-    ["qty",      "QTY",              "right"],
-    ["unit",     "UNIT PRICE",       "right"],
-    ["subtotal", "SUBTOTAL",         "right"],
+    ["item", "ITEM DESCRIPTION", "left"],
+    ["qty", "QTY", "right"],
+    ["unit", "UNIT PRICE", "right"],
+    ["subtotal", "SUBTOTAL", "right"],
   ];
 
   headers.forEach(([key, label, align]) => {
@@ -270,7 +309,7 @@ function drawTableHeader(doc: PDFKit.PDFDocument, y: number) {
 function drawTableRows(
   doc: PDFKit.PDFDocument,
   items: OrderItem[],
-  startY: number
+  startY: number,
 ): { y: number; subtotal: number } {
   let y = startY;
   let subtotal = 0;
@@ -282,7 +321,14 @@ function drawTableRows(
     const isAlt = i % 2 === 1;
 
     // Row background
-    fillRect(doc, MARGIN, y, CONTENT_WIDTH, ROW_HEIGHT, isAlt ? COLORS.rowAlt : "#FFFFFF");
+    fillRect(
+      doc,
+      MARGIN,
+      y,
+      CONTENT_WIDTH,
+      ROW_HEIGHT,
+      isAlt ? COLORS.rowAlt : "#FFFFFF",
+    );
 
     // Left accent stripe for alternating rows
     if (isAlt) {
@@ -296,7 +342,10 @@ function drawTableRows(
       .font(FONT.bold)
       .fontSize(10)
       .fillColor(COLORS.textPrimary)
-      .text(item.name, COL.item.x + 8, textY, { width: COL.item.width - 10, lineBreak: false });
+      .text(item.name, COL.item.x + 8, textY, {
+        width: COL.item.width - 10,
+        lineBreak: false,
+      });
 
     // Quantity
     doc
@@ -346,17 +395,18 @@ function drawTotals(
   doc: PDFKit.PDFDocument,
   y: number,
   subtotal: number,
-  grandTotal: number
+  grandTotal: number,
 ): number {
   const totalsX = PAGE_WIDTH - MARGIN - 240;
-  const labelW  = 130;
-  const valueW  = 100;
-  const valueX  = totalsX + labelW;
+  const labelW = 130;
+  const valueW = 100;
+  const valueX = totalsX + labelW;
+  const formatSAR = (amount: number) => (amount / 100).toFixed(2);
 
   const vat = grandTotal - subtotal; // derive VAT from provided total
   const rows: [string, number, boolean][] = [
-    ["Subtotal",  subtotal,   false],
-    ["VAT (15%)", vat >= 0 ? vat : 0, false],
+    ["Subtotal", subtotal, false],
+    // ["VAT (15%)", vat >= 0 ? vat : 0, false],
     ["TOTAL DUE", grandTotal, true],
   ];
 
@@ -365,12 +415,22 @@ function drawTotals(
   rows.forEach(([label, amount, isBold]) => {
     if (isBold) {
       // Grand total row — dark background
-      fillRect(doc, totalsX - 12, curY - 6, labelW + valueW + 20, 32, COLORS.totalBg);
+      fillRect(
+        doc,
+        totalsX - 12,
+        curY - 6,
+        labelW + valueW + 20,
+        32,
+        COLORS.totalBg,
+      );
       doc
         .font(FONT.bold)
         .fontSize(11)
         .fillColor(COLORS.textOnDark)
-        .text(label, totalsX - 4, curY + 4, { width: labelW, lineBreak: false });
+        .text(label, totalsX - 4, curY + 4, {
+          width: labelW,
+          lineBreak: false,
+        });
       doc
         .font(FONT.bold)
         .fontSize(13)
@@ -391,7 +451,7 @@ function drawTotals(
         .font(FONT.regular)
         .fontSize(10)
         .fillColor(COLORS.textPrimary)
-        .text(`SAR ${amount}`, valueX, curY, {
+        .text(`SAR ${formatSAR(amount)}`, valueX, curY, {
           width: valueW,
           align: "right",
           lineBreak: false,
@@ -421,7 +481,7 @@ function drawFooter(doc: PDFKit.PDFDocument) {
       "Thank you for your purchase! For support, contact us at support@mystore.com",
       MARGIN,
       footerY + 14,
-      { width: CONTENT_WIDTH, align: "center", lineBreak: false }
+      { width: CONTENT_WIDTH, align: "center", lineBreak: false },
     );
 
   doc
@@ -432,7 +492,7 @@ function drawFooter(doc: PDFKit.PDFDocument) {
       "Shahad · Hail, Saudi Arabia · VAT #300XXXXXXXXX · www.shahadaltharwa.com",
       MARGIN,
       footerY + 30,
-      { width: CONTENT_WIDTH, align: "center", lineBreak: false }
+      { width: CONTENT_WIDTH, align: "center", lineBreak: false },
     );
 }
 
@@ -444,15 +504,15 @@ export const generateInvoicePDF = (order: Order): Promise<Buffer> => {
       size: "A4",
       margins: { top: 0, bottom: 0, left: 0, right: 0 },
       info: {
-        Title:   `Invoice #${order.id}`,
-        Author:  "Shahad Online Store",
+        Title: `Invoice #${order.id}`,
+        Author: "Shahad Online Store",
         Subject: `Order invoice for ${order.email}`,
       },
     });
 
     const buffers: Uint8Array[] = [];
     doc.on("data", (chunk) => buffers.push(chunk));
-    doc.on("end",  () => resolve(Buffer.concat(buffers)));
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.on("error", reject);
 
     // Page background
@@ -472,13 +532,12 @@ export const generateInvoicePDF = (order: Order): Promise<Buffer> => {
 
     cursor = drawTableHeader(doc, cursor);
     const { y: afterRows, subtotal } = drawTableRows(doc, order.items, cursor);
-    drawTotals(doc, afterRows, subtotal, order.total);
+    drawTotals(doc, afterRows, subtotal, order.amount);
     drawFooter(doc);
 
     doc.end();
   });
 };
-
 
 // ─── Quick test harness ───────────────────────────────────────────────────────
 
