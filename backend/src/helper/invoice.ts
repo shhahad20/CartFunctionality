@@ -194,11 +194,11 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
       );
   }
 
-  doc
-    .font(FONT.regular)
-    .fontSize(10)
-    .fillColor(COLORS.textMuted)
-    .text(order.email, MARGIN, startY + (order.address_line1 ? 58 : 30));
+  // doc
+  //   .font(FONT.regular)
+  //   .fontSize(10)
+  //   .fillColor(COLORS.textMuted)
+  //   .text(order.email, MARGIN, startY + (order.address_line1 ? 58 : 30));
 
   // Right: Payment status badge
   const badgeX = PAGE_WIDTH - MARGIN - 70;
@@ -403,7 +403,7 @@ function drawTotals(
         .font(FONT.bold)
         .fontSize(13)
         .fillColor(COLORS.brandAccent)
-        .text(`SAR ${amount}`, valueX, curY + 2, {
+        .text(`SAR ${formatSAR(amount)}`, valueX, curY + 2, {
           width: valueW,
           align: "right",
           lineBreak: false,
@@ -419,7 +419,7 @@ function drawTotals(
         .font(FONT.regular)
         .fontSize(10)
         .fillColor(COLORS.textPrimary)
-        .text(`SAR ${formatSAR(amount)}`, valueX, curY, {
+        .text(`SAR ${amount}`, valueX, curY, {
           width: valueW,
           align: "right",
           lineBreak: false,

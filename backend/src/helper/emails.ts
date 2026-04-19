@@ -59,7 +59,7 @@ export function orderConfirmationTemplate(order: Order): string {
           ${order.items.map((i) => `
             <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f2f2f2;">
               <span style="padding-right:1rem;">${i.name} × ${i.quantity}</span>
-              <span>${i.price * i.quantity}</span>
+              <span> SAR ${i.price * i.quantity}</span>
             </div>
           `).join("")}
         </div>
