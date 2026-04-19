@@ -4,6 +4,7 @@ import { supabase } from "../config/supabaseClient.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { mergeOrAssignCart } from "../controllers/cartController.js";
 import { v4 as uuidv4 } from "uuid";
+import { ORDER_STATUS_LABELS } from "../types.js";
 
 const router = Router();
 
@@ -122,6 +123,7 @@ router.post("/", requireAuth, async (req, res) => {
       items: cart.items,
       amount: total,
       status: "pending",
+      order_status: ORDER_STATUS_LABELS.pending,
       // stripe_session_id: session.id,
     });
 

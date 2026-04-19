@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import { generateInvoicePDF } from "../helper/invoice.js";
 import { emailSender } from "../helper/emailSender.js";
 import { orderConfirmationTemplate } from "../helper/emails.js";
+import { ORDER_STATUS_LABELS } from "../types.js";
 
 const router = Router();
 /*
@@ -105,6 +106,7 @@ router.post(
               city: address?.city || null,
               address_line1: address?.line1 || null,
               postal_code: address?.postal_code || null,
+              order_status: ORDER_STATUS_LABELS.processing,
             })
             .eq("id", order.id)
             .neq("status", "paid");
@@ -130,7 +132,7 @@ router.post(
             ],
           });
 
-          console.log("cartId from session metadata:", order.cartId);
+
           const { error: cartError } = await supabase
             .from("carts")
             .update({ items: [], status: "active" })

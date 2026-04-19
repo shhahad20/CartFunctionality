@@ -1,7 +1,14 @@
 // ─────────────────────────────────────────────────────────────────
 // Shared Cart Types  (used by both frontend and backend)
 // ─────────────────────────────────────────────────────────────────
-
+export const ORDER_STATUS_LABELS = {
+  pending: "Pending",
+  in_review: "In Review",
+  processing: "Processing",
+  shipped: "Shipped",
+  completed: "Completed",
+  canceled: "Canceled",
+};
 export interface Product {
   id: string;
   name: string;
