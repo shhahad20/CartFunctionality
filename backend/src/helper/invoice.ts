@@ -1,35 +1,3 @@
-// import PDFDocument from "pdfkit";
-
-// export const generateInvoicePDF = (order: any): Promise<Buffer> => {
-//   return new Promise((resolve) => {
-//     const doc = new PDFDocument();
-//     const buffers: Uint8Array[] = [];
-
-//     doc.on("data", buffers.push.bind(buffers));
-//     doc.on("end", () => {
-//       const pdfData = Buffer.concat(buffers);
-//       resolve(pdfData);
-//     });
-
-//     doc.fontSize(20).text("Invoice", { align: "center" });
-//     doc.moveDown();
-
-//     doc.fontSize(12).text(`Order ID: ${order.id}`);
-//     doc.text(`Customer: ${order.email}`);
-//     doc.text(`Total: SAR ${order.total}`);
-//     doc.text(`Date: ${new Date().toLocaleDateString()}`);
-
-//     doc.moveDown();
-//     doc.text("Items:");
-
-//     order.items.forEach((item: any) => {
-//       doc.text(`- ${item.name} x${item.quantity} (SAR ${item.price})`);
-//     });
-
-//     doc.end();
-//   });
-// };
-
 import PDFDocument from "pdfkit";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -211,7 +179,7 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
       .font(FONT.regular)
       .fontSize(10)
       .fillColor(COLORS.textMuted)
-      .text(order.postal_code, MARGIN, startY + 30);
+      .text(order.postal_code, MARGIN, startY + 44);
   }
 
   if (order.city || order.country) {
@@ -222,7 +190,7 @@ function drawMeta(doc: PDFKit.PDFDocument, order: Order, y: number): number {
       .text(
         [order.city, order.country].filter(Boolean).join(", "),
         MARGIN,
-        startY + 44,
+        startY + 58,
       );
   }
 
@@ -403,7 +371,7 @@ function drawTotals(
   const valueX = totalsX + labelW;
   const formatSAR = (amount: number) => (amount / 100).toFixed(2);
 
-  const vat = grandTotal - subtotal; // derive VAT from provided total
+  // const vat = grandTotal - subtotal; // derive VAT from provided total
   const rows: [string, number, boolean][] = [
     ["Subtotal", subtotal, false],
     // ["VAT (15%)", vat >= 0 ? vat : 0, false],
@@ -538,31 +506,3 @@ export const generateInvoicePDF = (order: Order): Promise<Buffer> => {
     doc.end();
   });
 };
-
-// ─── Quick test harness ───────────────────────────────────────────────────────
-
-// import fs from "fs";
-
-// const sampleOrder: Order = {
-//   id: "ord_8f3k2mxp91",
-//   email: "customer@example.com",
-//   total: 689.25,
-//   createdAt: new Date(),
-//   billingAddress: {
-//     name: "Ahmad Al-Rashidi",
-//     line1: "123 King Fahd Road",
-//     city: "Riyadh",
-//     country: "Saudi Arabia",
-//   },
-//   items: [
-//     { name: "Wireless Noise-Cancelling Headphones", quantity: 1, price: 349.00 },
-//     { name: "USB-C Charging Cable (2m)",            quantity: 3, price: 29.00  },
-//     { name: "Phone Case — Midnight Black",          quantity: 1, price: 55.00  },
-//     { name: "Screen Protector (2-pack)",            quantity: 2, price: 25.00  },
-//   ],
-// };
-
-// generateInvoicePDF(sampleOrder).then((buf) => {
-//   fs.writeFileSync("/home/claude/invoice-gen/sample_invoice.pdf", buf);
-//   console.log("✅ Invoice generated: sample_invoice.pdf");
-// });

@@ -4,6 +4,7 @@ import { supabase } from "../config/supabaseClient.js";
 import bodyParser from "body-parser";
 import { generateInvoicePDF } from "../helper/invoice.js";
 import { emailSender } from "../helper/emailSender.js";
+import { orderConfirmationTemplate } from "../helper/emails.js";
 
 const router = Router();
 /*
@@ -119,15 +120,7 @@ router.post(
           await emailSender({
             email: order.email,
             subject: "Your Order Confirmation",
-            html: `
-              <h1>Thank you for your order</h1>
-              <p>Order ID: ${order.id}</p>
-              <p>Total: SAR ${order.amount}</p>
-              <h3>Items:</h3>
-              <ul>
-               ${order.items.map((i: any) => `<li>${i.name} x${i.quantity}</li>`).join("")}
-              </ul>
-              `,
+            html: orderConfirmationTemplate(order),
             attachments: [
               {
                 filename: `invoice-${order.id}.pdf`,
