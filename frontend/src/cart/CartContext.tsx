@@ -12,17 +12,19 @@ import { handleResponse } from "../helper/errorHelper";
 import { ENDPOINTS } from "../../api";
 interface CartState {
   items: CartItem[];
+  cartId: string | null;
   loading: boolean;
   error: string | null;
 }
 const initialState: CartState = {
   items: [],
+  cartId: null,
   loading: false,
   error: null,
 };
 
 type CartAction =
-  | { type: "SET_CART"; payload: CartItem[] }
+  | { type: "SET_CART"; payload: { items: CartItem[]; cartId: string } }
   | { type: "ADD_TO_CART"; payload: CartItem }
   | { type: "REMOVE_ITEM"; payload: string }
   | {
@@ -36,7 +38,7 @@ type CartAction =
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "SET_CART":
-      return { ...state, items: action.payload, loading: false };
+      return { ...state, items: action.payload.items, cartId: action.payload.cartId, loading: false };
 
     case "ADD_TO_CART": {
       const existingItems = state.items.find(
@@ -89,6 +91,7 @@ interface CartContextValue extends CartState, CartTotals {
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   checkout: () => Promise<void>;
+  cartId: string | null;
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -101,9 +104,6 @@ interface CartProviderProps {
 
 export function CartProvider({
   children,
-  // apiBase = "http://localhost:5173/api",
-  // apiBase = ENDPOINTS
-  // userId = null,
 }: CartProviderProps) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
@@ -117,7 +117,7 @@ export function CartProvider({
 
       const data = await handleResponse(res);
 
-      dispatch({ type: "SET_CART", payload: data.items ?? [] });
+      dispatch({ type: "SET_CART", payload: { items: data.items ?? [], cartId: data.cartId } });
     } catch (err) {
       dispatch({ type: "SET_ERROR", payload: (err as Error).message });
     }
@@ -267,6 +267,7 @@ export function CartProvider({
       updateQuantity,
       clearCart,
       checkout,
+      
     }),
     [
       state,

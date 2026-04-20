@@ -4,10 +4,9 @@ import { supabase } from "../config/supabaseClient.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { mergeOrAssignCart } from "../controllers/cartController.js";
 import { v4 as uuidv4 } from "uuid";
-import { ORDER_STATUS_LABELS } from "../types.js";
+import { ORDER_STATUS } from "../types.js";
 
 const router = Router();
-
 
 /* CHECKOUT FLOW/OPERATIONS :
 
@@ -22,6 +21,62 @@ const router = Router();
 # Checkout should never: send emails, generate PDFs,
 mark anything paid, or clear carts. Payment hasn't been confirmed yet.
 */
+export async function cancelOrderAndRestoreCart(
+  sessionId: string,
+  cartId?: string,
+  reason = "User exited or session expired",
+) {
+  console.log(`🔄 Canceling order for session: ${sessionId}, reason: ${reason}`);
+
+  // 1. Cancel the order tied to this session
+  const { data: order, error: fetchError } = await supabase
+    .from("orders")
+    .select("id, order_status, cart_id")
+    .eq("stripe_session_id", sessionId)
+    .single();
+
+  if (fetchError || !order) {
+    console.warn(`⚠️ No order found for session: ${sessionId}`);
+    return;
+  }
+
+  // Idempotency: skip if already canceled
+  if (order.order_status === ORDER_STATUS.CANCELED) {
+    console.log(`ℹ️ Order already canceled, skipping: ${order.id}`);
+    return;
+  }
+
+  const { error: orderError } = await supabase
+    .from("orders")
+    .update({ order_status: ORDER_STATUS.CANCELED })
+    .eq("id", order.id);
+
+  if (orderError) {
+    console.error("❌ Failed to cancel order:", orderError);
+  } else {
+    console.log(`✅ Order canceled: ${order.id}`);
+  }
+
+  // 2. Restore the cart — prefer cart_id from the order row, fallback to metadata
+  const resolvedCartId = order.cart_id || cartId;
+
+  if (!resolvedCartId) {
+    console.warn("⚠️ No cartId available to restore");
+    return;
+  }
+
+  const { error: cartError } = await supabase
+    .from("carts")
+    .update({ status: "active" })
+    .eq("id", resolvedCartId);
+
+  if (cartError) {
+    console.error("❌ Failed to restore cart:", cartError);
+  } else {
+    console.log(`✅ Cart restored: ${resolvedCartId}`);
+  }
+}
+
 router.post("/", requireAuth, async (req, res) => {
   try {
     const key = uuidv4();
@@ -115,22 +170,7 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Invalid cart total" });
     }
 
-    // ── Persist pending order ─────────────────────────────────────────────────
-    const { error: orderError } = await supabase.from("orders").insert({
-      cart_id: cartId,
-      user_id: userId,
-      email,
-      items: cart.items,
-      amount: total,
-      status: "pending",
-      order_status: ORDER_STATUS_LABELS.pending,
-      // stripe_session_id: session.id,
-    });
 
-    if (orderError) {
-      console.error("❌ Order insert failed:", orderError);
-      return res.status(500).json({ error: "Failed to create order" });
-    }
     // ── Create Stripe session ─────────────────────────────────────────────────
     const session = await stripe.checkout.sessions.create(
       {
@@ -147,24 +187,41 @@ router.post("/", requireAuth, async (req, res) => {
         // 🔺 Update URLs before deployment
         success_url:
           "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: "http://localhost:5173",
+        cancel_url:
+          "http://localhost:5173/cancel?session_id={CHECKOUT_SESSION_ID}",
       },
       {
         idempotencyKey: `${cartId}-${userId}-${key}`,
       },
     );
 
-    // ── Patch the session ID onto the order ──────────────────────────────────────
-    const { error: patchError } = await supabase
-      .from("orders")
-      .update({ stripe_session_id: session.id })
-      .eq("cart_id", cartId)
-      .eq("user_id", userId)
-      .eq("status", "pending");
+        // ── Persist pending order ─────────────────────────────────────────────────
+    const { error: orderError } = await supabase.from("orders").insert({
+      cart_id: cartId,
+      user_id: userId,
+      email,
+      items: cart.items,
+      amount: total,
+      status: "pending",
+      order_status: ORDER_STATUS.PENDING,
+      stripe_session_id: session.id,
+    });
 
-    if (patchError) {
-      console.error("⚠️ Could not patch stripe_session_id:", patchError);
+    if (orderError) {
+      console.error("❌ Order insert failed:", orderError);
+      return res.status(500).json({ error: "Failed to create order" });
     }
+    // ── Patch the session ID onto the order ──────────────────────────────────────
+    // const { error: patchError } = await supabase
+    //   .from("orders")
+    //   .update({ stripe_session_id: session.id })
+    //   .eq("cart_id", cartId)
+    //   .eq("user_id", userId)
+    //   .eq("status", "pending");
+
+    // if (patchError) {
+    //   console.error("⚠️ Could not patch stripe_session_id:", patchError);
+    // }
 
     console.log("✅ Stripe session created:", session.id);
     res.json({ url: session.url });
@@ -173,5 +230,76 @@ router.post("/", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Checkout failed" });
   }
 });
+// Cancel
+// router.post("/cancel", async (req: any, res: any) => {
+//   const { sessionId } = req.body;
+
+//   if (!sessionId) {
+//     return res.status(400).json({ error: "Missing session ID" });
+//   }
+
+//   try {
+//     // Retrieve session from Stripe to get metadata safely
+//     const session = await stripe.checkout.sessions.retrieve(sessionId);
+//     const cartId = session.metadata?.cartId;
+
+//     // Only cancel if still pending — guard against race with webhook
+//     const { data: order } = await supabase
+//       .from("orders")
+//       .select("id, order_status")
+//       .eq("stripe_session_id", sessionId)
+//       .single();
+
+//     if (!order) {
+//       return res.status(404).json({ error: "Order not found" });
+//     }
+
+//     if (order.order_status === ORDER_STATUS.CANCELED) {
+//       return res.status(200).json({ message: "Already canceled" });
+//     }
+
+//     await supabase
+//       .from("orders")
+//       .update({
+//         order_status: ORDER_STATUS.CANCELED,
+//         // cancel_reason: "User exited checkout",
+//       })
+//       .eq("id", order.id);
+
+//     // Restore cart so the user can retry
+//     if (cartId) {
+//       await supabase
+//         .from("carts")
+//         .update({ status: "active" })
+//         .eq("id", cartId);
+//     }
+
+//     return res.status(200).json({ message: "Order canceled, cart restored" });
+//   } catch (err) {
+//     console.error("Cancel order error:", err);
+//     return res.status(500).json({ error: "Failed to cancel order" });
+//   }
+// });
+// routes/order.ts
+// router.post("/cancel", async (req: any, res: any) => {
+//   const { sessionId } = req.body;
+
+//   if (!sessionId) {
+//     return res.status(400).json({ error: "Missing sessionId" });
+//   }
+
+//   try {
+//     // Fetch session from Stripe to get metadata (cartId)
+//     const session = await stripe.checkout.sessions.retrieve(sessionId);
+//     const cartId = session.metadata?.cartId;
+
+//     await cancelOrderAndRestoreCart(sessionId, cartId, "User exited checkout");
+
+//     return res.status(200).json({ success: true });
+//   } catch (err) {
+//     console.error("❌ Cancel endpoint error:", err);
+//     return res.status(500).json({ error: "Failed to cancel order" });
+//   }
+// });
 
 export default router;

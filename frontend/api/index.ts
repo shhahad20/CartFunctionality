@@ -45,11 +45,14 @@ export const PRODUCT_ENDPOINTS = {
 // ── Order Endpoints ──────────────────────────────────────────────────────
 export const ORDER_ENDPOINTS = {
   GET_BY_SESSION: (sessionId: string) => `${API.FULL_URL}/orders/session/${sessionId}`,
+  
+
 };
 
 // ── Webhook Endpoints ────────────────────────────────────────────────────
 export const WEBHOOK_ENDPOINTS = {
   STRIPE: `${API.FULL_URL}/webhook`,
+  CANCEL_ORDER: `${API.FULL_URL}/webhook/cancel`,
 };
 
 // ── Export All Endpoints ─────────────────────────────────────────────────

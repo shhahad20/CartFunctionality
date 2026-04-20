@@ -17,6 +17,7 @@ import { AuthModal } from "./components/AuthModal.tsx";
 import { Loader, LogOut, UserRound } from "lucide-react";
 import PasswordPage from "./components/ResetPassword.tsx";
 import { CART_ENDPOINTS, PRODUCT_ENDPOINTS } from "../api/index.ts";  
+import CanceledPage from "./components/Canceled.tsx";
 
 function ProductCard({
   product,
@@ -176,6 +177,7 @@ function App() {
             <Route path="/" element={<ProductsHome />} />
             <Route path="/product/:id" element={<ProductDetailsRoute />} />
             <Route path="/success" element={<SuccessPage />} />
+            <Route path="/cancel" element={<CanceledPage />} />
             <Route path="/password" element={<PasswordPage />} />
           </Routes>
 

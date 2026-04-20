@@ -1,11 +1,13 @@
 import { Router } from "express";
+import express from "express";
 import { stripe } from "../config/stripe.js";
 import { supabase } from "../config/supabaseClient.js";
 import bodyParser from "body-parser";
 import { generateInvoicePDF } from "../helper/invoice.js";
 import { emailSender } from "../helper/emailSender.js";
 import { orderConfirmationTemplate } from "../helper/emails.js";
-import { ORDER_STATUS_LABELS } from "../types.js";
+import { ORDER_STATUS } from "../types.js";
+import { cancelOrderAndRestoreCart } from "./checkoutRouter.js";
 
 const router = Router();
 /*
@@ -23,6 +25,29 @@ WEBHOOK FLOW/OPERATIONS:
 or do anything that requires the user's session — it runs server-to-server with no user context.
 */
 // ⚠️ Stripe needs raw body
+
+router.post("/cancel",express.json(), async (req: any, res: any) => {
+  const { sessionId } = req.body;
+
+  if (!sessionId) {
+    return res.status(400).json({ error: "Missing sessionId" });
+  }
+
+  try {
+    // Fetch session from Stripe to get metadata (cartId)
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const cartId = session.metadata?.cartId;
+
+    await cancelOrderAndRestoreCart(sessionId, cartId, "User exited checkout");
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("❌ Cancel endpoint error:", err);
+    return res.status(500).json({ error: "Failed to cancel order" });
+  }
+});
+
+
 router.post(
   "/",
   bodyParser.raw({ type: "application/json" }),
@@ -52,6 +77,17 @@ router.post(
     }
 
     try {
+      // ── Session expired (fires ~30 min after user exits) ──────────────────
+      if (event.type === "checkout.session.expired") {
+        const session = event.data.object as any;
+        const cartId = session.metadata?.cartId;
+
+        console.log(`⏰ Session expired: ${session.id}`);
+        await cancelOrderAndRestoreCart(session.id, cartId, "Session expired");
+      }
+
+      // ── Successful payment ────────────────────────────────────────────────
+
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as any;
 
@@ -71,8 +107,6 @@ router.post(
         const city = address?.city || null;
         const postal_code = address?.postal_code || null;
         const line1 = address?.line1 || null;
-
-        console.log("✅ Payment event:", session.id);
 
         // 🔒 verify payment
         if (session.payment_status !== "paid") {
@@ -106,7 +140,7 @@ router.post(
               city: address?.city || null,
               address_line1: address?.line1 || null,
               postal_code: address?.postal_code || null,
-              order_status: ORDER_STATUS_LABELS.processing,
+              order_status: ORDER_STATUS.PROCESSING,
             })
             .eq("id", order.id)
             .neq("status", "paid");
@@ -131,7 +165,6 @@ router.post(
               },
             ],
           });
-
 
           const { error: cartError } = await supabase
             .from("carts")
