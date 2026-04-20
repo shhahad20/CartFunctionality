@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  // useState,
 } from "react";
 import type { CartItem, CartTotals, Product } from "../types/types";
 import { handleResponse } from "../helper/errorHelper";
@@ -179,13 +178,13 @@ export function CartProvider({
 
         const data = (await handleResponse(res));
 
-        dispatch({ type: "SET_CART", payload: data.items ?? [] });
+        dispatch({ type: "SET_CART", payload: { items: data.items ?? [], cartId: state.cartId! } });
       } catch (err) {
         dispatch({ type: "SET_ERROR", payload: (err as Error).message });
         fetchCart();
       }
     },
-    [ fetchCart, state.loading],
+    [ fetchCart, state.loading, state.cartId],
   );
 
   const removeItem = useCallback(
@@ -201,13 +200,13 @@ export function CartProvider({
 
         const data = (await handleResponse(res));
 
-        dispatch({ type: "SET_CART", payload: data.items ?? [] });
+        dispatch({ type: "SET_CART", payload: { items: data.items ?? [], cartId: state.cartId! } });
       } catch (err) {
         dispatch({ type: "SET_ERROR", payload: (err as Error).message });
         fetchCart();
       }
     },
-    [ fetchCart, state.loading],
+    [ fetchCart, state.loading, state.cartId],
   );
 
   const updateQuantity = useCallback(
@@ -226,13 +225,13 @@ export function CartProvider({
         });
 
         const data = (await handleResponse(res));
-        dispatch({ type: "SET_CART", payload: data.items ?? [] });
+        dispatch({ type: "SET_CART", payload: { items: data.items ?? [], cartId: state.cartId! } });
       } catch (err) {
         dispatch({ type: "SET_ERROR", payload: (err as Error).message });
         fetchCart();
       }
     },
-    [ removeItem, fetchCart, state.loading],
+    [ removeItem, fetchCart, state.loading, state.cartId],
   );
 
   const clearCart = useCallback(async (): Promise<void> => {
