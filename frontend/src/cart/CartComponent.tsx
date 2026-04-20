@@ -9,7 +9,6 @@ import type { CartItem, Product } from "../types/types";
 import { useCart } from "./CartContext";
 import { useAuth } from "../auth/AuthProvider";
 import { AuthModal } from "../components/AuthModal";
-import {  WEBHOOK_ENDPOINTS } from "../../api";
 
 interface CheckoutModalProps {
   open: boolean;
@@ -138,26 +137,6 @@ export const CartDrawer: FC<CartDrawerProps> = ({
   onCheckout,
 }) => {
   const { items, itemCount, clearCart, loading } = useCart();
-// CartDrawer.tsx
-const { cartId, fetchCart } = useCart();
-
-useEffect(() => {
-  if (!open || !cartId) return; // only run when drawer is actually opened
-
-  const cancelStuckOrder = async () => {
-    const res = await fetch(`${WEBHOOK_ENDPOINTS.CANCEL_ORDER}`, {
-      method: "POST", 
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: new URLSearchParams(location.search).get("session_id") }),
-    });
-    const data = await res.json();
-    if (data.canceled) {
-      await fetchCart();
-    }
-  };
-
-  cancelStuckOrder();
-}, [open, cartId]); // fires every time the drawer opens
 
 
   useEffect(() => {
