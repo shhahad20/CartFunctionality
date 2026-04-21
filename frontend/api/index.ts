@@ -1,6 +1,6 @@
 /**
  * Centralized Backend API Configuration
- * Change the API_BASE_URL to switch between development/production environments
+ * Do not forget to change the API_BASE_URL to switch between development/production environments
  */
 
 const env = (import.meta as unknown as { env: Record<string, string> }).env;

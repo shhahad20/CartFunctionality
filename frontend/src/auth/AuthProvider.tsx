@@ -36,8 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [success, setSuccess] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  // const API = "http://localhost:4000/api/auth";
-
   const apiFetch = useCallback(
     async (url: string, options: RequestInit = {}) => {
       const res = await fetch(url, {
@@ -107,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         const message = err instanceof Error ? err.message : "Login failed";
         setError(message);
-        throw err; // re-throw so the form can react if needed
+        throw err; 
       } finally {
         setLoading(false);
       }
@@ -115,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [apiFetch],
   );
 
-  // 🆕 register
+  // register
   const register = useCallback(
     async (email: string, password: string) => {
       setError(null);
@@ -136,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const message =
           err instanceof Error ? err.message : "Registration failed";
         setError(message);
-        throw err; // re-throw so the form can react if needed
+        throw err;
       }
     },
     [apiFetch],
@@ -147,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await apiFetch(`${AUTH_ENDPOINTS.LOGOUT}`, { method: "POST" });
     } catch {
       // ignore network errors
+      
     } finally {
       setUser(null);
       setError(null);
