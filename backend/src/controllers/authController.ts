@@ -39,7 +39,9 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, username } = req.body;
     if (!email || !password || !username) {
-      return res.status(400).json({ error: "Email, password, and username required" });
+      return res
+        .status(400)
+        .json({ error: "Email, password, and username required" });
     }
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -134,7 +136,11 @@ export const login = async (req: Request, res: Response) => {
 
     res.json({
       message: "Logged in",
-      user: data.user,
+      user: {
+        id: data.user?.id,
+        email: data.user?.email,
+        username: data.user?.user_metadata?.username,
+      },
     });
   } catch (err) {
     console.error("LOGIN ERROR:", err);
@@ -150,9 +156,23 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: "Logged out" });
 };
 
+// export const getMe = async (req: AuthRequest, res: Response) => {
+//   // user comes from middleware
+//   console.log("GET ME:", req.user);
+//   res.json(req.user);
+// };
 export const getMe = async (req: AuthRequest, res: Response) => {
-  // user comes from middleware
-  res.json(req.user);
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  res.json({
+    id: user.id,
+    email: user.email,
+    username: user.user_metadata?.username, // 👈 extract it
+  });
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {

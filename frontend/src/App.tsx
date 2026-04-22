@@ -158,7 +158,7 @@ function App() {
             <div className="navRight">
               {user ? (
                 <>
-                  <span className="email-nav">{user.email}</span>
+                  <span className="email-nav">{user.username}</span>
                   <button className="navBtn" onClick={logout}>
                     <LogOut />
                   </button>

@@ -68,24 +68,27 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         {mode === "register" && (
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            onBlur={() => setConfirmTouched(true)}
-          />
+          <>
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onBlur={() => setConfirmTouched(true)}
+            />
+
+            <input
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </>
         )}
         {mode === "login" && (
           <span
