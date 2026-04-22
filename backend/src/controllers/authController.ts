@@ -37,13 +37,18 @@ export const protect = async (
 // _____________ AUTH CONTROLLER ____________________________
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password required" });
+    const { email, password, username } = req.body;
+    if (!email || !password || !username) {
+      return res.status(400).json({ error: "Email, password, and username required" });
     }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username,
+        },
+      },
     });
 
     if (error) return res.status(400).json({ error: error.message });

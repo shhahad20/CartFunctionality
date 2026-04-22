@@ -13,6 +13,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<"login" | "register">("login");
 
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmTouched, setConfirmTouched] = useState(false);
@@ -46,7 +47,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await register(email, password);
+        await register(email, password, username);
       }
       onClose();
     } catch (err) {
@@ -66,7 +67,11 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
         <input
           type="password"
           placeholder="Password"
