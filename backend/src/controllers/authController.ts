@@ -47,6 +47,7 @@ export const register = async (req: Request, res: Response) => {
       email,
       password,
       options: {
+        emailRedirectTo: "http://localhost:5173/confirm-email",
         data: {
           username,
         },
