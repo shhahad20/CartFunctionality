@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCart } from "../cart";
 import { BookmarkCheck } from "lucide-react";
+import { ORDER_ENDPOINTS } from "../../api";
 
 type OrderItem = {
   productId: string;
@@ -35,8 +36,8 @@ export default function SuccessPage() {
 
   useEffect(() => {
     if (!sessionId) return;
-
-    fetch(`http://localhost:4000/api/orders/session/${sessionId}`)
+ 
+    fetch(`${ORDER_ENDPOINTS.GET_BY_SESSION(sessionId)}`)
       .then((res) => res.json())
       .then(setOrder)
       .catch(console.error)
