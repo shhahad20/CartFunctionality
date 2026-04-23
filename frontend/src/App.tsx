@@ -19,6 +19,7 @@ import PasswordPage from "./components/ResetPassword.tsx";
 import { CART_ENDPOINTS, PRODUCT_ENDPOINTS } from "../api/index.ts";  
 import CanceledPage from "./components/Canceled.tsx";
 import ConfirmPage from "./components/ConfirmEmail.tsx";
+import { Footer } from "./components/Footer.tsx";
 
 function ProductCard({
   product,
@@ -193,6 +194,7 @@ function App() {
             onClose={() => setCheckoutOpen(false)}
           />
         </div>
+        <Footer/>
       </CartProvider>
     // </BrowserRouter>
   );
