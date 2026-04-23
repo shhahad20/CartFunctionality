@@ -479,8 +479,12 @@ a {
 }
 
 .productDetailsPrice {
-  height: 36px;
+  /* height: 36px; */
+  height: auto;
   min-width: auto;
+  /* background-color: gold;
+  display: flex;
+  justify-content: center; */
   padding: 0 14px;
   font-size: 0.95rem;
 }

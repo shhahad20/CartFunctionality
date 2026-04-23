@@ -172,7 +172,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   res.json({
     id: user.id,
     email: user.email,
-    username: user.user_metadata?.username, // 👈 extract it
+    username: user.user_metadata?.username,
   });
 };
 

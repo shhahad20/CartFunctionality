@@ -13,7 +13,7 @@ import "./App.css";
 import { ProductDetailsPage } from "./product/ProductDetailsPage.tsx";
 import { CheckoutModal } from "./cart/CartComponent.tsx";
 import SuccessPage from "./components/SuccessPage.tsx";
-import { AuthModal } from "./components/AuthModal.tsx";
+import AuthPage from "./components/AuthPage.tsx";
 import { Loader, LogOut, UserRound } from "lucide-react";
 import PasswordPage from "./components/ResetPassword.tsx";
 import { CART_ENDPOINTS, PRODUCT_ENDPOINTS } from "../api/index.ts";  
@@ -123,14 +123,13 @@ function ProductDetailsRoute() {
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
 
+  const navigate = useNavigate();
   const { user, logout, initialized } = useAuth();
-  // const navigate = useNavigate();
 
   const handleCheckout = () => {
     if (!user) {
-      setAuthOpen(true); // force login before checkout
+      navigate("/auth");
       return;
     }
 
@@ -140,7 +139,7 @@ function App() {
   if (!initialized) return <Loader />;
 
   return (
-    <BrowserRouter>
+    // <BrowserRouter>
       <CartProvider apiBase={CART_ENDPOINTS.GET_CART}>
         <div className="shopPage">
           <nav className="topNav">
@@ -165,7 +164,7 @@ function App() {
                   </button>
                 </> 
               ) : (
-                <button className="navBtn" onClick={() => setAuthOpen(true)}>
+                <button className="navBtn" onClick={() => navigate("/auth")}>
                   <UserRound />
                 </button>
               )}
@@ -181,6 +180,7 @@ function App() {
             <Route path="/cancel" element={<CanceledPage />} />
             <Route path="/confirm-email" element={<ConfirmPage />} />
             <Route path="/password" element={<PasswordPage />} />
+            <Route path="/auth" element={<AuthPage />} />
           </Routes>
 
           <CartDrawer
@@ -192,10 +192,9 @@ function App() {
             open={checkoutOpen}
             onClose={() => setCheckoutOpen(false)}
           />
-          <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
         </div>
       </CartProvider>
-    </BrowserRouter>
+    // </BrowserRouter>
   );
 }
 
