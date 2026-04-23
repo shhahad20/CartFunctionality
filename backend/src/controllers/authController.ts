@@ -43,23 +43,32 @@ export const register = async (req: Request, res: Response) => {
         .status(400)
         .json({ error: "Email, password, and username required" });
     }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: "http://localhost:5173/confirm-email",
-        data: {
-          username,
-        },
+        data: { username },
       },
     });
 
     if (error) return res.status(400).json({ error: error.message });
 
+    // Supabase returns a fake success for duplicate emails when email
+    // confirmation is enabled — detect it by checking for a null identity.
+    const isDuplicate =
+      data.user &&
+      data.user.identities &&
+      data.user.identities.length === 0;
+
+    if (isDuplicate) {
+      return res.status(409).json({ error: "Email is already registered" });
+    }
+
     res.json({
       message: "User created",
       user: data.user,
-      // session: data.session,
     });
   } catch (err) {
     res.status(500).json({ error: "Server error" });

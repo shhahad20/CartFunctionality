@@ -14,7 +14,7 @@ export const API = {
   BASE: API_BASE_URL,
   FULL_URL: `${API_BASE_URL}${API_VERSION}`,
 };
- 
+  
 // ── Auth Endpoints ───────────────────────────────────────────────────────
 export const AUTH_ENDPOINTS = {
   REGISTER: `${API.FULL_URL}/auth/register`,
