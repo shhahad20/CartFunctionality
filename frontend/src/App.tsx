@@ -66,10 +66,17 @@ const SORT_OPTIONS = [
 
 function ProductsHome() {
   const navigate = useNavigate();
-  // const [products, setProducts] = useState<Product[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const { products, meta, loading, error, filters, updateFilter, setFilters } =
     useProducts();
+
+  const handleSearch = () => {
+    setFilters((prev) => ({ ...prev, search: searchInput, page: 1 }));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSearch();
+  };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const index = parseInt(e.target.value);
@@ -79,14 +86,14 @@ function ProductsHome() {
       setFilters((prev) => ({
         ...prev,
         sortBy: selected.value,
-        order: selected.order as "asc" | "desc",
+        order: selected.order as 'asc' | 'desc',
         page: 1,
       }));
     }
   };
 
   if (loading) return <p style={{ padding: 16 }}>Loading products...</p>;
-  if (error) return <p style={{ padding: 16, color: "red" }}>Error: {error}</p>;
+  if (error) return <p style={{ padding: 16, color: 'red' }}>Error: {error}</p>;
 
   return (
     <div>
@@ -95,19 +102,18 @@ function ProductsHome() {
         <input
           type="text"
           placeholder="Search products..."
-          value={filters.search}
-          onChange={(e) => updateFilter("search", e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="searchInput"
         />
-        <button
-          className="searchBtn"
-          onClick={() => setFilters((prev) => ({ ...prev, page: 1 }))}
-        >
+        <button className="searchBtn" onClick={handleSearch}>
           Search
         </button>
+
         <select
           value={filters.status}
-          onChange={(e) => updateFilter("status", e.target.value)}
+          onChange={(e) => updateFilter('status', e.target.value)}
           className="filterSelect"
         >
           <option value="">All Statuses</option>
