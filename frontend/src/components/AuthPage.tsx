@@ -667,7 +667,7 @@ export default function AuthPage() {
               </>
             )}
 
-            <button className="auth-btn" type="submit" disabled={loading || isPasswordMismatch}>
+            <button className="auth-btn" type="submit" disabled={!!(loading || isPasswordMismatch)}>
               {loading ? (
                 <>
                   <div className="auth-spinner" /> Processing…
