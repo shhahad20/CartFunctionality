@@ -1,4 +1,4 @@
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { CartProvider, CartDrawer, CartToggle } from "./cart";
 import { useAuth } from "./auth/AuthProvider";
@@ -56,71 +56,39 @@ function ProductCard({
   );
 }
 
-const STATUS_OPTIONS = ['active', 'inactive', 'pending'];
+const STATUS_OPTIONS = ["active", "inactive", "pending"];
 const SORT_OPTIONS = [
-  { label: 'Newest', value: 'created_at', order: 'desc' },
-  { label: 'Oldest', value: 'created_at', order: 'asc' },
-  { label: 'Name A–Z', value: 'name', order: 'asc' },
-  { label: 'Name Z–A', value: 'name', order: 'desc' },
+  { label: "Newest", value: "created_at", order: "desc" },
+  { label: "Oldest", value: "created_at", order: "asc" },
+  { label: "Name A–Z", value: "name", order: "asc" },
+  { label: "Name Z–A", value: "name", order: "desc" },
 ];
 
 function ProductsHome() {
   const navigate = useNavigate();
   // const [products, setProducts] = useState<Product[]>([]);
   // const [loading, setLoading] = useState(true);
-  const { products, meta, loading, error, filters, updateFilter, setFilters } = useProducts();
+  const { products, meta, loading, error, filters, updateFilter, setFilters } =
+    useProducts();
 
-const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const index = parseInt(e.target.value);
     const selected = SORT_OPTIONS[index];
-    
+
     if (selected) {
       setFilters((prev) => ({
         ...prev,
         sortBy: selected.value,
-        order: selected.order as 'asc' | 'desc',
+        order: selected.order as "asc" | "desc",
         page: 1,
       }));
     }
   };
 
-  // useEffect(() => {
-  //   fetch(`${PRODUCT_ENDPOINTS.GET_ALL}`)
-  //     .then((res) => res.json())
-  //     .then((data) => {
-  //       setProducts(data);
-  //     })
-  //     .catch((err) => {
-  //       console.error("Failed to fetch products:", err.message);
-  //     })
-  //     .finally(() => {
-  //       setLoading(false);
-  //     });
-  // }, []);
+  if (loading) return <p style={{ padding: 16 }}>Loading products...</p>;
+  if (error) return <p style={{ padding: 16, color: "red" }}>Error: {error}</p>;
 
-  // if (loading) {
-  //   return <p style={{ padding: 16 }}>Loading products...</p>;
-  // }
-
-  // if (products.length === 0) {
-  //   return <p style={{ padding: 16 }}>No products found.</p>;
-  // }
-
-   if (loading) return <p style={{ padding: 16 }}>Loading products...</p>;
-  if (error) return <p style={{ padding: 16, color: 'red' }}>Error: {error}</p>;
-
-  
   return (
-    // <main className="productsGrid">
-    //   {products.map((p) => (
-    //     <ProductCard
-    //       key={p.id}
-    //       product={p}
-    //       onOpen={() => navigate(`/product/${p.id}`)}
-    //     />
-    //   ))}
-    // </main>
-
     <div>
       {/* Search + Filter + Sort Bar */}
       <div className="filtersBar">
@@ -128,13 +96,18 @@ const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
           type="text"
           placeholder="Search products..."
           value={filters.search}
-          onChange={(e) => updateFilter('search', e.target.value)}
+          onChange={(e) => updateFilter("search", e.target.value)}
           className="searchInput"
         />
-
+        <button
+          className="searchBtn"
+          onClick={() => setFilters((prev) => ({ ...prev, page: 1 }))}
+        >
+          Search
+        </button>
         <select
           value={filters.status}
-          onChange={(e) => updateFilter('status', e.target.value)}
+          onChange={(e) => updateFilter("status", e.target.value)}
           className="filterSelect"
         >
           <option value="">All Statuses</option>
@@ -174,21 +147,26 @@ const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         <div className="pagination">
           <button
             disabled={filters.page === 1}
-            onClick={() => setFilters((prev) => ({ ...prev, page: prev.page - 1 }))}
+            onClick={() =>
+              setFilters((prev) => ({ ...prev, page: prev.page - 1 }))
+            }
           >
             Prev
           </button>
-          <span>{filters.page} / {meta.totalPages}</span>
+          <span>
+            {filters.page} / {meta.totalPages}
+          </span>
           <button
             disabled={filters.page === meta.totalPages}
-            onClick={() => setFilters((prev) => ({ ...prev, page: prev.page + 1 }))}
+            onClick={() =>
+              setFilters((prev) => ({ ...prev, page: prev.page + 1 }))
+            }
           >
             Next
           </button>
         </div>
       )}
     </div>
-
   );
 }
 

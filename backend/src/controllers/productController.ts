@@ -18,7 +18,7 @@ export async function getProducts(
   const ascending = order === "asc";
 
   try {
-    let query = supabase.from("items").select("*", { count: "exact" });
+    let query = supabase.from("products").select("*", { count: "exact" });
 
     // Search (full-text on name & description)
     if (search) {
