@@ -56,7 +56,7 @@ function ProductCard({
   );
 }
 
-const STATUS_OPTIONS = ["active", "inactive", "pending"];
+// const STATUS_OPTIONS = ["active", "inactive", "pending"];
 const SORT_OPTIONS = [
   { label: "Newest", value: "created_at", order: "desc" },
   { label: "Oldest", value: "created_at", order: "asc" },
@@ -67,7 +67,7 @@ const SORT_OPTIONS = [
 function ProductsHome() {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
-  const { products, meta, loading, error, filters, updateFilter, setFilters } =
+  const { products, meta, loading, error, filters, setFilters } =
     useProducts();
 
   const handleSearch = () => {
@@ -111,7 +111,7 @@ function ProductsHome() {
           Search
         </button>
 
-        <select
+        {/* <select
           value={filters.status}
           onChange={(e) => updateFilter('status', e.target.value)}
           className="filterSelect"
@@ -122,7 +122,7 @@ function ProductsHome() {
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </option>
           ))}
-        </select>
+        </select> */}
 
         <select onChange={handleSortChange} className="filterSelect">
           {SORT_OPTIONS.map((opt, i) => (

@@ -55,6 +55,7 @@ a {
   gap: 12px;
   margin-bottom: 28px;
   flex-wrap: wrap;
+  max-width: 60%;
 }
 
 .searchInput,
@@ -77,7 +78,8 @@ a {
 }
 
 .filterSelect {
-  min-width: 140px;
+  /* min-width: 140px; */
+  max-width: fit-content;
 }
 
 .searchInput::placeholder {
@@ -328,7 +330,10 @@ a {
   .pricePill {
     font-size: 0.9rem;
   }
-
+  .filtersBar{
+    max-width: 100%;
+  }
+/* 
   .filtersBar {
     flex-direction: column;
   }
@@ -341,7 +346,7 @@ a {
   .filterSelect {
     width: 100%;
     min-width: auto;
-  }
+  } */
 }
 
 @media (max-width: 640px) {
@@ -398,7 +403,7 @@ a {
     font-size: 0.95rem;
   }
 
-  .filtersBar {
+  /* .filtersBar {
     flex-direction: column;
     gap: 10px;
   }
@@ -413,7 +418,7 @@ a {
   .searchBtn {
     width: 100%;
     padding: 10px 12px;
-  }
+  } */
 
   .pagination {
     gap: 12px;
